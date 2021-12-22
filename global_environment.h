@@ -5,13 +5,14 @@
 
 #ifndef GLOBAL_ENVIROMENT_H
 #define GLOBAL_ENVIROMENT_H
-#define DEBUG_MODE 0            //控制是否要印出debug message
+
+#define DEBUG_MODE 0 //控制是否要印出debug message
 #define PI 3.14
-#define BENCHMARK_HO_DESIGN 1   //控制handover overhead 要使用何種設定?
-#define PROPOSED_METHOD  1      //控制是要模擬ref還是模擬proposed method
-#define RESIDUAL_RA_METHOD 0    //RESIDUAL_RA_METHOD 控制剩餘資源的分配方法    1. MST  2. DP
+#define BENCHMARK_HO_DESIGN 1 //控制handover overhead 要使用何種設定?
+#define PROPOSED_METHOD 1     //控制是要模擬ref還是模擬proposed method
+#define RESIDUAL_RA_METHOD 0  //RESIDUAL_RA_METHOD 控制剩餘資源的分配方法    1. MST  2. DP
 #define PROPOTION_BY_ACHE_DR 0
-#define PRESSURE 0              //壓力測試 PRESSURE==1 會讓UE集中在房間左下角
+#define PRESSURE 0 //壓力測試 PRESSURE==1 會讓UE集中在房間左下角
 ////////////////////////////////////////////////////////
 /////////        ENVIRONMENT CONSTANTS          ////////
 ////////////////////////////////////////////////////////
@@ -19,11 +20,11 @@
 // room size 40*40*3.5
 const double room_size = 40;
 
-// - RF AP number : 4                              
-const int RF_AP_Num = 4;   
+// - RF AP number : 4
+const int RF_AP_Num = 4;
 
-// - VLC AP number : 4*4=16                              
-const int VLC_AP_Num = 16;   
+// - VLC AP number : 4*4=16
+const int VLC_AP_Num = 16;
 
 // - foreach row , VLC AP number = sqrt(VLC_AP_Num) //assume VLC_AP_Num is a square num
 const int VLC_AP_per_row = 4;
@@ -31,21 +32,21 @@ const int VLC_AP_per_row = 4;
 // - foreach row , RF AP number = sqrt(RF_AP_Num) //assume RF_AP_Num is a square num
 const int RF_AP_per_row = 2;
 
-// - UE number : 20-100 step 10                   
+// - UE number : 20-100 step 10
 const int UE_Num = 30;
 
 // -Time period in each round : 500 ms = 0.5s
-const double Tp = 500; 
+const double Tp = 500;
 
 // -mean of handover overhead : ref 11有討論25ms ~ 175ms的情況，而我選25ms當作最後的參數
-const double meanHO = 25; 
+const double meanHO = 25;
 
 ////////////////////////////////////////////////////////
 /////////          Each RF AP                  ////////
 ////////////////////////////////////////////////////////
-                                                                    
-// - height 3.5m                                
-const double RF_AP_height = 3.5;               
+
+// - height 3.5m
+const double RF_AP_height = 3.5;
 
 // - power 1w
 const int RF_AP_Power = 1;
@@ -59,9 +60,9 @@ const double Nr = 1e-15;
 ////////////////////////////////////////////////////////
 /////////          Each VLC AP                  ////////
 ////////////////////////////////////////////////////////
-                                                                    
-// - height 3.5m                                
-const double VLC_AP_height = 3.5;               
+
+// - height 3.5m
+const double VLC_AP_height = 3.5;
 
 // - average trasmitted optical power per VLC AP : 9W
 const int VLC_AP_Popt = 9;
@@ -70,10 +71,10 @@ const int VLC_AP_Popt = 9;
 const int VLC_AP_Bandwidth = 40;
 
 // - power spectral density Nl    10^-21 A2/Hz = 10^-15 A2/MHz
-const double  Nl = 1e-15;
+const double Nl = 1e-15;
 
 // - Optical to electric conversion efficiency, kappa = 0.53 A/W
-const double kappa = 0.53 ;
+const double kappa = 0.53;
 
 ////////////////////////////////////////////////////////
 /////////          Each UE                      ////////
@@ -86,19 +87,19 @@ const double ratioHDU = 0.5;
 const double high_demand = 40; //Mbps
 
 //   - 低demand
-const double low_demand = 10;  //Mbps
+const double low_demand = 10; //Mbps
 
-//   - height 0.85m                            
-const double UE_height = 0.85;                  
+//   - height 0.85m
+const double UE_height = 0.85;
 
 //   - threshold = 9 Mb/s (follow benchmark 建議)
-const double threshold = 9 ;//Mbps
+const double threshold = 9; //Mbps
 
 ////////////////////////////////////////////////////////
 /////////         VLC CHANNEL CONSTANTS         ////////
 ////////////////////////////////////////////////////////
 
-// FOV 
+// FOV
 const double VLC_field_of_view = 180;
 
 // semi-angle at half-illumination (phi_1/2) 60

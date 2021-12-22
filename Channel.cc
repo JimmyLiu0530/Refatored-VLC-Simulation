@@ -16,31 +16,39 @@
 #include <boost/math/distributions/rayleigh.hpp>
 
 //弧度轉角度
-double RadtoDeg(const double & radian){
-    return radian * 180 / PI;
+double RadtoDeg(const double &radian)
+{
+  return radian * 180 / PI;
 }
 
 //角度轉弧度
-double DegtoRad(const double & degree){
-    return degree * PI / 180;
+double DegtoRad(const double &degree)
+{
+  return degree * PI / 180;
 }
 
 //計算整個RF channel gain matrix
-void Calculate_RF_Channel_Gain_Matrix(NodeContainer  & RF_AP_Node , NodeContainer  & UE_Nodes ,std::vector<std::vector<double>>  & RF_Channel_Gain_Matrix){
-    for(int i=0 ; i < RF_AP_Num ; i++){
-        for(int j=0 ; j < UE_Num ; j++){
-            RF_Channel_Gain_Matrix[i][j] = Estimate_one_RF_Channel_Gain(RF_AP_Node.Get(i),UE_Nodes.Get(j));
-        }
+void Calculate_RF_Channel_Gain_Matrix(NodeContainer &RF_AP_Node, NodeContainer &UE_Nodes, std::vector<std::vector<double>> &RF_Channel_Gain_Matrix)
+{
+  for (int i = 0; i < RF_AP_Num; i++)
+  {
+    for (int j = 0; j < UE_Num; j++)
+    {
+      RF_Channel_Gain_Matrix[i][j] = Estimate_one_RF_Channel_Gain(RF_AP_Node.Get(i), UE_Nodes.Get(j));
     }
+  }
 }
 
 //計算整個VLC channel gain matrix
-void Calculate_VLC_Channel_Gain_Matrix(NodeContainer  & VLC_AP_Nodes , NodeContainer  &UE_Nodes ,std::vector<std::vector<double>>  &VLC_Channel_Gain_Matrix){
-    for(int i=0 ; i < VLC_AP_Num ; i++){
-        for(int j=0 ; j < UE_Num ; j++){
-            VLC_Channel_Gain_Matrix[i][j] = Estimate_one_VLC_Channel_Gain(VLC_AP_Nodes.Get(i),UE_Nodes.Get(j));
-        }
+void Calculate_VLC_Channel_Gain_Matrix(NodeContainer &VLC_AP_Nodes, NodeContainer &UE_Nodes, std::vector<std::vector<double>> &VLC_Channel_Gain_Matrix)
+{
+  for (int i = 0; i < VLC_AP_Num; i++)
+  {
+    for (int j = 0; j < UE_Num; j++)
+    {
+      VLC_Channel_Gain_Matrix[i][j] = Estimate_one_VLC_Channel_Gain(VLC_AP_Nodes.Get(i), UE_Nodes.Get(j));
     }
+  }
 }
 
 //計算某個 <RF_AP,UE> pair 的Channel gain
@@ -56,68 +64,64 @@ void Calculate_VLC_Channel_Gain_Matrix(NodeContainer  & VLC_AP_Nodes , NodeConta
         v = 1.6
         X is the shadowing component which is assumed to be a zero mean Gaussian distributed random variable with a standard deviation of 1.8 dB
  */
-double Estimate_one_RF_Channel_Gain(Ptr<Node> RF_AP,Ptr<Node> UE){
-    
+double Estimate_one_RF_Channel_Gain(Ptr<Node> RF_AP, Ptr<Node> UE)
+{
 
-    //取得兩者之間距離
-    double d = GetDistance_AP_UE(RF_AP,UE);
-    double d0 = 1 ; 
-    double v = 1.6 ;
+  //取得兩者之間距離
+  double d = GetDistance_AP_UE(RF_AP, UE);
+  double d0 = 1;
+  double v = 1.6;
 
-    //生成X 
-    //X is zero mean Gaussian distributed random variable with a standard deviation of 1.8 dB
-    std::normal_distribution<double> Gaussian (0.0,1.8);    //normal distribution 即 Gaussian distribution       
-    std::default_random_engine distribution(std::chrono::system_clock::now().time_since_epoch().count());
-    double X = Gaussian(distribution);
+  //生成X
+  //X is zero mean Gaussian distributed random variable with a standard deviation of 1.8 dB
+  std::normal_distribution<double> Gaussian(0.0, 1.8); //normal distribution 即 Gaussian distribution
+  std::default_random_engine distribution(std::chrono::system_clock::now().time_since_epoch().count());
+  double X = Gaussian(distribution);
 
-   
+  double L_d0 = 47.9;
 
-    double L_d0 = 47.9 ;
+  //算得L(d)
+  double L_d = L_d0 + 10 * v * log10(d / d0) + X;
 
-    //算得L(d)
-    double L_d = L_d0 +  10 * v * log10(d/d0) + X ;
+  //Gμ,α(f) = sqrt(10^(−L(d)/10)) * hr,
+  double rf_channel_gain = sqrt(pow(10, ((-1) * L_d / 10)));
 
-    //Gμ,α(f) = sqrt(10^(−L(d)/10)) * hr,
-    double rf_channel_gain = sqrt(pow(10,((-1) * L_d / 10))) ;
+  //hr is Rayleigh distribution
+  //Rayleigh distribution要額外裝C++ boost libraray才能用或是從uniform distribution間接產生
+  //To generate samples from a Rayleigh distribution with scale b, generate a uniform sample u from (0, 1) and return sqrt(-2 * b^2 * log(u)).
+  boost::math::rayleigh_distribution<double> rayleigh(sqrt(2.46));
+  std::uniform_real_distribution<double> random_p(0.0, 1.0);
 
-    //hr is Rayleigh distribution 
-    //Rayleigh distribution要額外裝C++ boost libraray才能用或是從uniform distribution間接產生
-    //To generate samples from a Rayleigh distribution with scale b, generate a uniform sample u from (0, 1) and return sqrt(-2 * b^2 * log(u)).
-    boost::math::rayleigh_distribution<double> rayleigh(sqrt(2.46));
-    std::uniform_real_distribution<double> random_p(0.0, 1.0);
-    
+  double p = random_p(distribution);
+  double hr = quantile(rayleigh, p);
 
-    double p = random_p(distribution);
-    double hr = quantile(rayleigh, p);
-    
-    rf_channel_gain = rf_channel_gain * hr;
-    
+  rf_channel_gain = rf_channel_gain * hr;
 
-    return rf_channel_gain;
+  return rf_channel_gain;
 }
 
 //計算某個 pair(VLC_AP,UE)的Channel gain
-double Estimate_one_VLC_Channel_Gain(Ptr<Node> VLC_AP , Ptr<Node> UE){
+double Estimate_one_VLC_Channel_Gain(Ptr<Node> VLC_AP, Ptr<Node> UE)
+{
 
-    //入射角
-    double incidence_angle = Get_Incidence_Angle_AP_UE(VLC_AP,UE);
-    
-    
-    double VLC_concentrator_gain = pow( VLC_refractive_index , 2 ) / pow(sin(DegtoRad(VLC_field_of_view / 2)),2);
-    
-    if( RadtoDeg(incidence_angle) >= VLC_field_of_view / 2)
-      VLC_concentrator_gain = 0;
+  //入射角
+  double incidence_angle = Get_Incidence_Angle_AP_UE(VLC_AP, UE);
 
-    //若入射角 >= FOV/2則Channel gain爲0
-    if( RadtoDeg(incidence_angle) >= VLC_field_of_view / 2)
-        return 0;
+  double VLC_concentrator_gain = pow(VLC_refractive_index, 2) / pow(sin(DegtoRad(VLC_field_of_view / 2)), 2);
 
-    //否則Channel gain不爲0,再來做接下來的計算
+  if (RadtoDeg(incidence_angle) >= VLC_field_of_view / 2)
+    VLC_concentrator_gain = 0;
 
-    //lambertian raidation coefficient m = -ln2 / ln(cos(Φ1/2))
-    const double lambertian_coefficient = (-1) / (log(cos(DegtoRad(VLC_PHI_half))));    //cos只吃弧度,所以要轉
-    
-    /*  輻射角角度同入射角
+  //若入射角 >= FOV/2則Channel gain爲0
+  if (RadtoDeg(incidence_angle) >= VLC_field_of_view / 2)
+    return 0;
+
+  //否則Channel gain不爲0,再來做接下來的計算
+
+  //lambertian raidation coefficient m = -ln2 / ln(cos(Φ1/2))
+  const double lambertian_coefficient = (-1) / (log(cos(DegtoRad(VLC_PHI_half)))); //cos只吃弧度,所以要轉
+
+  /*  輻射角角度同入射角
         輻射角 (incidence) AP射出的角度
 
             AP  --------
@@ -134,52 +138,50 @@ double Estimate_one_VLC_Channel_Gain(Ptr<Node> VLC_AP , Ptr<Node> UE){
         故這裡直接用入射角值assign即可
 
     */
-    //輻射角
-    const double irradiance_angle = incidence_angle;
+  //輻射角
+  const double irradiance_angle = incidence_angle;
 
-    //取得AP的位置
-    Ptr<MobilityModel> VLC_AP_MobilityModel = VLC_AP->GetObject<MobilityModel> ();
-    Vector VLC_AP_Pos = VLC_AP_MobilityModel->GetPosition ();
-    
-    //取得UE的位置
-    Ptr<MobilityModel> UE_MobilityModel = UE->GetObject<MobilityModel> ();
-    Vector UE_Pos = UE_MobilityModel->GetPosition ();
+  //取得AP的位置
+  Ptr<MobilityModel> VLC_AP_MobilityModel = VLC_AP->GetObject<MobilityModel>();
+  Vector VLC_AP_Pos = VLC_AP_MobilityModel->GetPosition();
 
-    //AP與UE的高度差
-    const double height_diff = VLC_AP_Pos.z - UE_Pos.z;
+  //取得UE的位置
+  Ptr<MobilityModel> UE_MobilityModel = UE->GetObject<MobilityModel>();
+  Vector UE_Pos = UE_MobilityModel->GetPosition();
 
-    //AP與UE的平面距離差
-    const double distance = GetDistance_AP_UE(VLC_AP,UE);
+  //AP與UE的高度差
+  const double height_diff = VLC_AP_Pos.z - UE_Pos.z;
 
+  //AP與UE的平面距離差
+  const double distance = GetDistance_AP_UE(VLC_AP, UE);
 
-    //計算channel gain
-    double channel_gain = ( lambertian_coefficient + 1) / ( 2 * PI * pow(distance,2) ) * VLC_receiver_area ; // first term
-    channel_gain  = channel_gain * VLC_concentrator_gain; // second term g(theta) 
-    channel_gain  = channel_gain * VLC_filter_gain ; // third term Ts(theta) 
-    channel_gain  = channel_gain * pow( cos(irradiance_angle) , lambertian_coefficient ); // forth term [cos(phi)]^m
-    channel_gain  = channel_gain * cos(incidence_angle); // last term
+  //計算channel gain
+  double channel_gain = (lambertian_coefficient + 1) / (2 * PI * pow(distance, 2)) * VLC_receiver_area; // first term
+  channel_gain = channel_gain * VLC_concentrator_gain;                                                  // second term g(theta)
+  channel_gain = channel_gain * VLC_filter_gain;                                                        // third term Ts(theta)
+  channel_gain = channel_gain * pow(cos(irradiance_angle), lambertian_coefficient);                     // forth term [cos(phi)]^m
+  channel_gain = channel_gain * cos(incidence_angle);                                                   // last term
 
-    return channel_gain;
+  return channel_gain;
 }
 
+//計算某個 pair(AP,UE)在3維空間的距離
+double GetDistance_AP_UE(Ptr<Node> AP, Ptr<Node> UE)
+{
 
-//計算某個 pair(AP,UE)在3維空間的距離 
-double GetDistance_AP_UE(Ptr<Node> AP ,Ptr<Node> UE){
-    
-    //取得AP的位置
-    Ptr<MobilityModel> AP_MobilityModel = AP->GetObject<MobilityModel> ();
-    Vector AP_Pos = AP_MobilityModel->GetPosition ();
-    
-    //取得UE的位置
-    Ptr<MobilityModel> UE_MobilityModel = UE->GetObject<MobilityModel> ();
-    Vector UE_Pos = UE_MobilityModel->GetPosition ();
+  //取得AP的位置
+  Ptr<MobilityModel> AP_MobilityModel = AP->GetObject<MobilityModel>();
+  Vector AP_Pos = AP_MobilityModel->GetPosition();
 
-    //MobilityModel有內建的計算距離公式
-    return AP_MobilityModel->GetDistanceFrom (UE_MobilityModel);
+  //取得UE的位置
+  Ptr<MobilityModel> UE_MobilityModel = UE->GetObject<MobilityModel>();
+  Vector UE_Pos = UE_MobilityModel->GetPosition();
+
+  //MobilityModel有內建的計算距離公式
+  return AP_MobilityModel->GetDistanceFrom(UE_MobilityModel);
 }
 
-
-//計算某個 pair(VLC_AP,UE)之間的入射角弧度 （incidence angle in Rad） 
+//計算某個 pair(VLC_AP,UE)之間的入射角弧度 （incidence angle in Rad）
 /*
         這裡採用餘弦定理來算角度，如下圖所示:
 
@@ -198,116 +200,125 @@ double GetDistance_AP_UE(Ptr<Node> AP ,Ptr<Node> UE){
         通過邊長反推角度
         θ=cos^(-1)( (a^2+b^2-c^2)/2ab )
 */
-double Get_Incidence_Angle_AP_UE(Ptr<Node> AP, Ptr<Node> UE){
-    
-    //取得AP的位置
-    Ptr<MobilityModel> AP_MobilityModel = AP->GetObject<MobilityModel> ();
-    Vector AP_Pos = AP_MobilityModel->GetPosition ();
-    
-    //取得UE的位置
-    Ptr<MobilityModel> UE_MobilityModel = UE->GetObject<MobilityModel> ();
-    Vector UE_Pos = UE_MobilityModel->GetPosition ();
-    
-    
-    //高度差 a
-    const double height_diff = AP_Pos.z - UE_Pos.z; 
-    
-    //xy在平面上的距離 c
-    double dx=AP_Pos.x-UE_Pos.x;
-    double dy=AP_Pos.y-UE_Pos.y;
-    const double plane_diff = sqrt(pow(dx,2)+pow(dy,2)); 
+double Get_Incidence_Angle_AP_UE(Ptr<Node> AP, Ptr<Node> UE)
+{
 
-    //斜邊 b
-    const double hypotenuse = sqrt(pow(height_diff,2)+pow(plane_diff,2));
+  //取得AP的位置
+  Ptr<MobilityModel> AP_MobilityModel = AP->GetObject<MobilityModel>();
+  Vector AP_Pos = AP_MobilityModel->GetPosition();
 
-    //已知三角形三邊a,b,c，求ab兩邊之間夾角角度-->採用餘弦定理
-    const double angle = acos((pow(height_diff,2) + pow(hypotenuse,2) - pow(plane_diff,2)) / (2*height_diff*hypotenuse));
+  //取得UE的位置
+  Ptr<MobilityModel> UE_MobilityModel = UE->GetObject<MobilityModel>();
+  Vector UE_Pos = UE_MobilityModel->GetPosition();
 
+  //高度差 a
+  const double height_diff = AP_Pos.z - UE_Pos.z;
 
-    //回傳的是弧度
-    return angle;
+  //xy在平面上的距離 c
+  double dx = AP_Pos.x - UE_Pos.x;
+  double dy = AP_Pos.y - UE_Pos.y;
+  const double plane_diff = sqrt(pow(dx, 2) + pow(dy, 2));
+
+  //斜邊 b
+  const double hypotenuse = sqrt(pow(height_diff, 2) + pow(plane_diff, 2));
+
+  //已知三角形三邊a,b,c，求ab兩邊之間夾角角度-->採用餘弦定理
+  const double angle = acos((pow(height_diff, 2) + pow(hypotenuse, 2) - pow(plane_diff, 2)) / (2 * height_diff * hypotenuse));
+
+  //回傳的是弧度
+  return angle;
 }
 
-
 //計算整個RF SINR matrix
-void Calculate_RF_SINR_Matrix(std::vector<std::vector<double>> & RF_Channel_Gain_Matrix,std::vector<std::vector<double>> & RF_SINR_Matrix){
-    for(int i=0 ; i < RF_AP_Num ; i++){
-        for(int j=0 ; j < UE_Num ; j++){
-            RF_SINR_Matrix[i][j] = Estimate_one_RF_SINR(RF_Channel_Gain_Matrix , i , j);
-        }
+void Calculate_RF_SINR_Matrix(std::vector<std::vector<double>> &RF_Channel_Gain_Matrix, std::vector<std::vector<double>> &RF_SINR_Matrix)
+{
+  for (int i = 0; i < RF_AP_Num; i++)
+  {
+    for (int j = 0; j < UE_Num; j++)
+    {
+      RF_SINR_Matrix[i][j] = Estimate_one_RF_SINR(RF_Channel_Gain_Matrix, i, j);
     }
+  }
 }
 
 //計算整個VLC SINR matrix
-void Calculate_VLC_SINR_Matrix(std::vector<std::vector<double>> & VLC_Channel_Gain_Matrix,std::vector<std::vector<double>> & VLC_SINR_Matrix){
-    for(int i=0 ; i < VLC_AP_Num ; i++){
-        for(int j=0 ; j < UE_Num ; j++){
-            VLC_SINR_Matrix[i][j] = Estimate_one_VLC_SINR(VLC_Channel_Gain_Matrix ,  i , j );
-        }
+void Calculate_VLC_SINR_Matrix(std::vector<std::vector<double>> &VLC_Channel_Gain_Matrix, std::vector<std::vector<double>> &VLC_SINR_Matrix)
+{
+  for (int i = 0; i < VLC_AP_Num; i++)
+  {
+    for (int j = 0; j < UE_Num; j++)
+    {
+      VLC_SINR_Matrix[i][j] = Estimate_one_VLC_SINR(VLC_Channel_Gain_Matrix, i, j);
     }
+  }
 }
 
 //計算某個 pair(RF_AP,UE)的SINR
 //Note : paper假設RF_AP之間使用不同的頻寬，不會有幹擾項，所以等同SNR
-double Estimate_one_RF_SINR(std::vector<std::vector<double>>  & RF_Channel_Gain_Matrix , int RF_AP_Index , int UE_Index){
-  
+double Estimate_one_RF_SINR(std::vector<std::vector<double>> &RF_Channel_Gain_Matrix, int RF_AP_Index, int UE_Index)
+{
+
   //不會有幹擾項(等同SNR)，所以interference = 0
   double interference = 0;
 
   //再計算出noise項
-  double noise = RF_AP_Bandwidth * Nr ;
+  double noise = RF_AP_Bandwidth * Nr;
 
   //再計算出SINR項
-  double SINR = pow(RF_Channel_Gain_Matrix[RF_AP_Index][UE_Index],2) * RF_AP_Power / (noise + interference);
+  double SINR = pow(RF_Channel_Gain_Matrix[RF_AP_Index][UE_Index], 2) * RF_AP_Power / (noise + interference);
 
   return SINR;
-
 }
 
 //計算某個 pair(VLC_AP,UE)的SINR
-double Estimate_one_VLC_SINR(std::vector<std::vector<double>> & VLC_Channel_Gain_Matrix, int VLC_AP_Index , int UE_Index){
+double Estimate_one_VLC_SINR(std::vector<std::vector<double>> &VLC_Channel_Gain_Matrix, int VLC_AP_Index, int UE_Index)
+{
 
   //先把其他AP和該UE的channel gain納入幹擾項
   double interference = 0;
-  for(int i = 0 ; i < VLC_AP_Num ; i++ ){
-      if(i!=VLC_AP_Index)
-        interference +=  pow(kappa * VLC_AP_Popt * VLC_Channel_Gain_Matrix[i][UE_Index],2);
+  for (int i = 0; i < VLC_AP_Num; i++)
+  {
+    if (i != VLC_AP_Index)
+      interference += pow(kappa * VLC_AP_Popt * VLC_Channel_Gain_Matrix[i][UE_Index], 2);
   }
 
   //再計算出noise項
-  double noise = VLC_AP_Bandwidth * Nl ;
+  double noise = VLC_AP_Bandwidth * Nl;
 
   //再計算出SINR項
-  double SINR = pow(kappa * VLC_AP_Popt * VLC_Channel_Gain_Matrix[VLC_AP_Index][UE_Index],2)/ (noise + interference);
+  double SINR = pow(kappa * VLC_AP_Popt * VLC_Channel_Gain_Matrix[VLC_AP_Index][UE_Index], 2) / (noise + interference);
 
   return SINR;
 }
 
-
 //計算RF DataRate
-void Calculate_RF_DataRate_Matrix(std::vector<std::vector<double>>  & RF_SINR_Matrix,std::vector<std::vector<double>> & RF_DataRate_Matrix){
+void Calculate_RF_DataRate_Matrix(std::vector<std::vector<double>> &RF_SINR_Matrix, std::vector<std::vector<double>> &RF_DataRate_Matrix)
+{
 
-  for(int i=0 ; i < RF_AP_Num ; i++){
-    
-    for(int j=0 ; j < UE_Num ; j++){
-      
+  for (int i = 0; i < RF_AP_Num; i++)
+  {
+
+    for (int j = 0; j < UE_Num; j++)
+    {
+
       //Shannon capacity
-      RF_DataRate_Matrix[i][j] =  RF_AP_Bandwidth * log2(1 + RF_SINR_Matrix[i][j]) ;
-    
+      RF_DataRate_Matrix[i][j] = RF_AP_Bandwidth * log2(1 + RF_SINR_Matrix[i][j]);
     }
   }
 }
 
 //計算VLC DataRate
-void Calculate_VLC_DataRate_Matrix(std::vector<std::vector<double>> & VLC_SINR_Matrix,std::vector<std::vector<double>> & VLC_DataRate_Matrix){
+void Calculate_VLC_DataRate_Matrix(std::vector<std::vector<double>> &VLC_SINR_Matrix, std::vector<std::vector<double>> &VLC_DataRate_Matrix)
+{
 
-  for(int i=0 ; i < VLC_AP_Num ; i++){
-    
-    for(int j=0 ; j < UE_Num ; j++){
-      
+  for (int i = 0; i < VLC_AP_Num; i++)
+  {
+
+    for (int j = 0; j < UE_Num; j++)
+    {
+
       //Shannon capacity
-      VLC_DataRate_Matrix[i][j] = 0.5 * VLC_AP_Bandwidth * log2(1 + VLC_SINR_Matrix[i][j]) ;
-    
+      VLC_DataRate_Matrix[i][j] = 0.5 * VLC_AP_Bandwidth * log2(1 + VLC_SINR_Matrix[i][j]);
     }
   }
 }
@@ -322,8 +333,9 @@ void Calculate_VLC_DataRate_Matrix(std::vector<std::vector<double>> & VLC_SINR_M
     ..
     ..
 */
-void Calculate_Handover_Efficiency_Matrix(std::vector<std::vector<double>> & Handover_Efficiency_Matrix){
-  
+void Calculate_Handover_Efficiency_Matrix(std::vector<std::vector<double>> &Handover_Efficiency_Matrix)
+{
+
   /////////////////////////////////////////
   ////                                 ////
   ////  我這裏寫了兩種做法                ////
@@ -333,93 +345,94 @@ void Calculate_Handover_Efficiency_Matrix(std::vector<std::vector<double>> & Han
   ////  所以法1是寫給使用者參考           ////
   ////                                ////
   ////////////////////////////////////////
-  
+
   // 做法1 ： 參考Mobility Management for Hybrid LiFi and WiFi Networks in the Presence of Light-path Blockage
   // 將HHO跟VHO分開計算
   // 這種做法較爲合理，但不是我的benmark的做法
-  
-  //要算出Handover_Efficiency_Matrix之前要先隨機出Handover_Overhead才可計算
-  std::vector<std::vector<int>> Handover_Overhead_Matrix(RF_AP_Num + VLC_AP_Num,std::vector<int> (RF_AP_Num + VLC_AP_Num,0));
 
-  #if ! BENCHMARK_HO_DESIGN
+  //要算出Handover_Efficiency_Matrix之前要先隨機出Handover_Overhead才可計算
+  std::vector<std::vector<int>> Handover_Overhead_Matrix(RF_AP_Num + VLC_AP_Num, std::vector<int>(RF_AP_Num + VLC_AP_Num, 0));
+
+#if !BENCHMARK_HO_DESIGN
   //Handover分兩種
   //假設前提 :  Tp = 500ms
   //Vertical handover overhead LiFi <-> WiFi之間互相切換所產生的 cost  : 平均時間 250ms
   //Horizontal handover overhead LiFi <-> LiFi or WiFi <-> WiFi 之間互相切換所產生的 cost  : 平均時間 100ms
-  
-  std::poisson_distribution<int> TVHO (250);       //Vertical handover overhead 平均爲250ms的poisson distribution
-  std::poisson_distribution<int> THHO (100);       //Horizontal handover overhead  平均爲100ms的poisson distribution
+
+  std::poisson_distribution<int> TVHO(250); //Vertical handover overhead 平均爲250ms的poisson distribution
+  std::poisson_distribution<int> THHO(100); //Horizontal handover overhead  平均爲100ms的poisson distribution
   std::default_random_engine generator(std::chrono::system_clock::now().time_since_epoch().count());
-  
 
   // 給 Handover_Overhead_Matrix 隨機的overhead
-  for(int i=0 ; i < RF_AP_Num + VLC_AP_Num ; i++){
-    
-    for(int j=0 ; j < RF_AP_Num + VLC_AP_Num ; j++){
-      
+  for (int i = 0; i < RF_AP_Num + VLC_AP_Num; i++)
+  {
+
+    for (int j = 0; j < RF_AP_Num + VLC_AP_Num; j++)
+    {
+
       //如果i==j代表沒有AP沒變，沒有換手，也就沒有overhead
-      if( i == j )
+      if (i == j)
         Handover_Overhead_Matrix[i][j] = 0;
 
       //i!=j代表AP有變，產生換手效應，overhead有兩種可能
       else
       {
-          //如果是RF AP（index 0 ~ RF_AP_Num-1）之間切換 --> 屬於 Horizontal handover overhead
-          if(i < RF_AP_Num && j < RF_AP_Num)
-            
-            //THHO隨機出一個數賦值
-            Handover_Overhead_Matrix[i][j] = THHO(generator);
+        //如果是RF AP（index 0 ~ RF_AP_Num-1）之間切換 --> 屬於 Horizontal handover overhead
+        if (i < RF_AP_Num && j < RF_AP_Num)
 
-          
-          //如果是VLC AP (index RF_AP_Num ~ RF_AP_Num + VLC_AP_Num-1）之間切換 --> 也屬於 Horizontal handover overhead
-          else if(i >= RF_AP_Num && j >= RF_AP_Num)
-            
-            //THHO隨機出一個數賦值
-            Handover_Overhead_Matrix[i][j] = THHO(generator);
+          //THHO隨機出一個數賦值
+          Handover_Overhead_Matrix[i][j] = THHO(generator);
 
-          //若皆非以上兩者情況-->則爲LiFi <-> WiFi AP之間切換 --> 屬於 Vertical handover overhead
-          else  
-            //TVHO隨機出一個數賦值
-            Handover_Overhead_Matrix[i][j] = TVHO(generator);
-      } 
+        //如果是VLC AP (index RF_AP_Num ~ RF_AP_Num + VLC_AP_Num-1）之間切換 --> 也屬於 Horizontal handover overhead
+        else if (i >= RF_AP_Num && j >= RF_AP_Num)
+
+          //THHO隨機出一個數賦值
+          Handover_Overhead_Matrix[i][j] = THHO(generator);
+
+        //若皆非以上兩者情況-->則爲LiFi <-> WiFi AP之間切換 --> 屬於 Vertical handover overhead
+        else
+          //TVHO隨機出一個數賦值
+          Handover_Overhead_Matrix[i][j] = TVHO(generator);
+      }
     }
   }
-  #else
+#else
   // 做法2 ： 參考我的benchmark -> Dynamic Load Balancing for Hybrid Li-Fi and RF Indoor Networks
   // 並沒有分HHO跟VHO，overhead的mean 25～175ms不等
   // 做法1比較合理，但是這是benchmark做法，先寫起來放在看要怎麼樣
-  
-  std::poisson_distribution<int> HO (meanHO);      
+
+  std::poisson_distribution<int> HO(meanHO);
   std::default_random_engine generator(std::chrono::system_clock::now().time_since_epoch().count());
-  
+
   // 給 Handover_Overhead_Matrix 隨機的overhead
-  for(int i=0 ; i < RF_AP_Num + VLC_AP_Num ; i++){
-    
-    for(int j=0 ; j < RF_AP_Num + VLC_AP_Num ; j++){
-      
+  for (int i = 0; i < RF_AP_Num + VLC_AP_Num; i++)
+  {
+
+    for (int j = 0; j < RF_AP_Num + VLC_AP_Num; j++)
+    {
+
       //如果i==j代表沒有AP沒變，沒有換手，也就沒有overhead
-      if( i == j )
+      if (i == j)
         Handover_Overhead_Matrix[i][j] = 0;
 
       //i!=j代表AP有變，產生換手效應，有overhead產生
       else
-        
+
         //隨機出一個數賦值
         Handover_Overhead_Matrix[i][j] = HO(generator);
-    } 
+    }
   }
-  #endif
+#endif
 
   //接下來要計算 Handover_Efficiency_Matrix 即納入overhead後 實際上的有效傳輸比例
-  for(int i=0 ; i < RF_AP_Num + VLC_AP_Num ; i++){
-    
-    for(int j=0 ; j < RF_AP_Num + VLC_AP_Num ; j++){
-        
-        //handover efficiency = max(0 , 1 - overhead / 每一輪的period Tp)
-        Handover_Efficiency_Matrix[i][j] = (1 - ((double)Handover_Overhead_Matrix[i][j] / Tp)) > 0 ? 1 - ((double)Handover_Overhead_Matrix[i][j] / Tp) : 0;
+  for (int i = 0; i < RF_AP_Num + VLC_AP_Num; i++)
+  {
 
+    for (int j = 0; j < RF_AP_Num + VLC_AP_Num; j++)
+    {
+
+      //handover efficiency = max(0 , 1 - overhead / 每一輪的period Tp)
+      Handover_Efficiency_Matrix[i][j] = (1 - ((double)Handover_Overhead_Matrix[i][j] / Tp)) > 0 ? 1 - ((double)Handover_Overhead_Matrix[i][j] / Tp) : 0;
     }
-  
   }
-
 }

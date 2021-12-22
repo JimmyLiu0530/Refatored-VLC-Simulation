@@ -8,7 +8,6 @@
 #include "ns3/network-module.h"
 #include "ns3/mobility-module.h"
 
-
 using namespace ns3;
 
 void install_RF_AP_mobility(NodeContainer &RF_AP_Nodes);

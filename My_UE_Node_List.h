@@ -14,6 +14,6 @@
 
 using namespace ns3;
 
-std::vector<My_UE_Node> Initialize_My_UE_Node_list(NodeContainer  & UE_Nodes);
+std::vector<My_UE_Node> Initialize_My_UE_Node_list(NodeContainer &UE_Nodes);
 
 #endif
