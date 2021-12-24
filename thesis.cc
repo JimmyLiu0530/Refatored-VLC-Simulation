@@ -107,8 +107,7 @@ static void RxEndAddress(Ptr<const Packet> p, const Address &address)
 	std::cout << "Rx throughput value is :" << throughput << std::endl;
 	std::cout << "Current time is :" << theTime.back() << std::endl;
 	std::cout << "Received size: " << p->GetSize() << " at: " << Simulator::Now().GetSeconds() << "s"
-			  << "IP: " << InetSocketAddress::ConvertFrom(address).GetIpv4() < < < <
-		std::endl;
+			  << "IP: " << InetSocketAddress::ConvertFrom(address).GetIpv4() << std::endl;
 }
 
 // void change_dev_rate(NetDeviceContainer & channel){
@@ -212,7 +211,7 @@ int main(int argc, char *argv[])
 #endif
 
 	//生成自定義的UE list
-	std::vector<My_UE_Node> myUElist = Initialize_My_UE_Node_list(UE_Nodes);
+	std::vector<My_UE_Node> myUEList = Initialize_My_UE_Node_List(UE_Nodes);
 
 	/** add ip/tcp stack to all nodes.**/
 	// InternetStackHelper internet;
@@ -292,7 +291,7 @@ int main(int argc, char *argv[])
 	//   }
 	// }
 
-	Simulator::Schedule(Seconds(0.0), &Dynamic_Update_to_NextState, RF_AP_Nodes, VLC_AP_Nodes, UE_Nodes, myUElist);
+	Simulator::Schedule(Seconds(0.0), &Dynamic_Update_to_NextState, RF_AP_Nodes, VLC_AP_Nodes, UE_Nodes, myUEList);
 	Simulator::Stop(Minutes(2));
 	Simulator::Run();
 
@@ -322,8 +321,8 @@ int main(int argc, char *argv[])
 
 	for (int i = 0; i < UE_Num; i++)
 	{
-		square_of_sum += recorded_avg_throughput_per_UE[i] / myUElist[i].Get_Required_DataRate();
-		sum_of_square += pow(recorded_avg_throughput_per_UE[i] / myUElist[i].Get_Required_DataRate(), 2);
+		square_of_sum += recorded_avg_throughput_per_UE[i] / myUEList[i].Get_Required_DataRate();
+		sum_of_square += pow(recorded_avg_throughput_per_UE[i] / myUEList[i].Get_Required_DataRate(), 2);
 	}
 	square_of_sum = pow(square_of_sum, 2);
 
