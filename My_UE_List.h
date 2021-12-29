@@ -13,9 +13,6 @@
 
 class MyUeList
 {
-private: 
-    std::vector<My_UE_Node> UE_list;
-
 public:
     MyUeList(NodeContainer &UE_nodes);
     std::vector<My_UE_Node> getList();
@@ -28,6 +25,8 @@ public:
     std::iterator<My_UE_Node> begin();
     std::iterator<My_UE_Node> end();
 
+private: 
+    std::vector<My_UE_Node> UE_list;
     
 };
 

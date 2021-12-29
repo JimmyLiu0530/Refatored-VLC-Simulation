@@ -7,11 +7,13 @@
 #include <fstream>
 #include <string>
 #include <chrono> //seed
+#include <random>
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/mobility-module.h"
 #include "Channel.h"
+#include "global_environment.h"
 #include <boost/math/distributions/rayleigh.hpp>
 
 //弧度轉角度
@@ -75,7 +77,7 @@ double Estimate_one_RF_Channel_Gain(Ptr<Node> RF_AP, Ptr<Node> UE)
 	//X is zero mean Gaussian distributed random variable with a standard deviation of 1.8 dB
 	std::normal_distribution<double> Gaussian(0.0, 1.8); //normal distribution 即 Gaussian distribution
 	std::default_random_engine distribution(std::chrono::system_clock::now().time_since_epoch().count());
-	double X = Gaussian(distribution);
+	double X = std::Gaussian(distribution);
 
 	double L_d0 = 47.9;
 
