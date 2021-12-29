@@ -19,6 +19,7 @@
 #include "ProposedMethod.h"
 #include "Channel.h"
 #include "print.h"
+#include "MY_UE_List.h"
 
 //執行Proposed的Dynamic Load balancing
 //即paper的Algo1
@@ -35,7 +36,7 @@ void Proposed_DynamicLB(int &state,
                         std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
                         std::vector<std::vector<int>> &AP_Association_Matrix,
                         std::vector<std::vector<double>> &TDMA_Matrix,
-                        std::vector<My_UE_Node> &myUElist)
+                        MyUeList &my_UE_list)
 {
 
     //先做PreCalculation算出目前的各種SINR DataMatrix
@@ -50,12 +51,12 @@ void Proposed_DynamicLB(int &state,
     //初始state採用state0的做法(沒有考慮handover)
     if (state == 0)
 
-        Proposed_LB_state0(state, RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, AP_Association_Matrix, TDMA_Matrix, myUElist);
+        Proposed_LB_state0(state, RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, AP_Association_Matrix, TDMA_Matrix, my_UE_list);
 
     //若不是初始state則採用stateN(有考慮handover)
     else
 
-        Proposed_LB_stateN(state, RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, AP_Association_Matrix, TDMA_Matrix, myUElist);
+        Proposed_LB_stateN(state, RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, AP_Association_Matrix, TDMA_Matrix, my_UE_list);
 
     std::cout << std::setiosflags(std::ios::fixed);
 
@@ -84,18 +85,18 @@ void Proposed_DynamicLB(int &state,
 
 #endif
 
-    sort(myUElist.begin(), myUElist.end(), [](My_UE_Node a, My_UE_Node b)
+    sort(my_UE_list.begin(), my_UE_list.end(), [](My_UE_Node a, My_UE_Node b)
          { return a.Get_Required_DataRate() > b.Get_Required_DataRate(); });
 
 #if DEBUG_MODE
 
     // 印每個UE的歷史datarate
-    for (int i = 0; i < myUElist.size(); i++)
+    for (int i = 0; i < my_UE_list.size(); i++)
     {
-        std::cout << "State : " << state << " UE :" << myUElist[i].GetID() << " Demand = " << myUElist[i].Get_Required_DataRate() << " linkde to ";
-        (myUElist[i].Get_Now_Associated_AP() < RF_AP_Num) ? (std::cout << "RF AP " << myUElist[i].Get_Now_Associated_AP()) : (std::cout << "VLC AP " << myUElist[i].Get_Now_Associated_AP() - RF_AP_Num);
-        std::cout << "  DateRate = " << myUElist[i].Get_Throughput_History().back();
-        std::cout << "  DateRate / demand = " << myUElist[i].Get_Throughput_History().back() / myUElist[i].Get_Required_DataRate() << std::endl;
+        std::cout << "State : " << state << " UE :" << my_UE_list[i].GetID() << " Demand = " << my_UE_list.getElement(i).Get_Required_DataRate() << " linkde to ";
+        (my_UE_list.getElement(i).Get_Now_Associated_AP() < RF_AP_Num) ? (std::cout << "RF AP " << my_UE_list.getElement(i).Get_Now_Associated_AP()) : (std::cout << "VLC AP " << my_UE_list.getElement(i).Get_Now_Associated_AP() - RF_AP_Num);
+        std::cout << "  DateRate = " << my_UE_list.getElement(i).Get_Throughput_History().back();
+        std::cout << "  DateRate / demand = " << my_UE_list.getElement(i).Get_Throughput_History().back() / my_UE_list.getElement(i).Get_Required_DataRate() << std::endl;
     }
     std::cout << std::endl;
 #endif
@@ -111,7 +112,7 @@ void Proposed_LB_state0(
     std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
     std::vector<std::vector<int>> &AP_Association_Matrix,
     std::vector<std::vector<double>> &TDMA_Matrix,
-    std::vector<My_UE_Node> &myUElist)
+    MyUeList &my_UE_list)
 {
     //clear AP association matrix （新一輪的開始要重新算）
     for (int i = 0; i < RF_AP_Num + VLC_AP_Num; i++)
@@ -133,7 +134,7 @@ void Proposed_LB_state0(
     //並根據Required datarate做大到小排序
     //爲了讓demand大的先挑
 
-    sort(myUElist.begin(), myUElist.end(), [](My_UE_Node a, My_UE_Node b)
+    sort(my_UE_list.begin(), my_UE_list.end(), [](My_UE_Node a, My_UE_Node b)
          { return a.Get_Required_DataRate() > b.Get_Required_DataRate(); });
 
     ////////////////////////////////
@@ -150,7 +151,7 @@ void Proposed_LB_state0(
     /* AP selection Phase */
 
     //照demand 大->小順序,給每個UE挑
-    for (int u = 0; u < myUElist.size(); u++)
+    for (int u = 0; u < my_UE_list.getSize(); u++)
     {
 
         //Avaliable_Resource_Matrix:即我論文提到所謂"max A-Q"的A Matrix
@@ -168,11 +169,11 @@ void Proposed_LB_state0(
 
         //A-=Q
         for (int i = 0; i < RF_AP_Num; i++)
-            Avaliable_Resource_Matrix[i] -= myUElist[u].Get_Required_DataRate() / RF_DataRate_Matrix[i][myUElist[u].GetID()];
-
+            Avaliable_Resource_Matrix[i] -= my_UE_list.getElement(u).Get_Required_DataRate() / RF_DataRate_Matrix[i][my_UE_list.getElement(u).GetID()];
+            
         //A-=Q
         for (int i = 0; i < VLC_AP_Num; i++)
-            Avaliable_Resource_Matrix[i + RF_AP_Num] -= myUElist[u].Get_Required_DataRate() / VLC_DataRate_Matrix[i][myUElist[u].GetID()];
+            Avaliable_Resource_Matrix[i + RF_AP_Num] -= my_UE_list.getElement(u).Get_Required_DataRate() / VLC_DataRate_Matrix[i][my_UE_list.getElement(u).GetID()];
 
         //接下來要選max A-Q的AP，因爲我剩的資源越多，越有機會服務更多人
         //用Beta記錄max A-Q的AP
@@ -220,19 +221,19 @@ void Proposed_LB_state0(
         /*接下來要決定到底要連Beta_l還是Beta_w ： 看誰能提供的滿意度高就連誰，如果一樣大優先連lifi*/
 
         //連到Beta_l可提供的throughput
-        double potential_throughput_of_Beta_l = TDMA_Matrix[Beta_l][0] * VLC_DataRate_Matrix[Beta_l - RF_AP_Num][myUElist[u].GetID()];
+        double potential_throughput_of_Beta_l = TDMA_Matrix[Beta_l][0] * VLC_DataRate_Matrix[Beta_l - RF_AP_Num][my_UE_list.getElement(u).GetID()];
 
         //連到Beta_l可提供的滿意度,上限爲1
-        double potential_satisfaction_of_Beta_l = potential_throughput_of_Beta_l / myUElist[u].Get_Required_DataRate();
+        double potential_satisfaction_of_Beta_l = potential_throughput_of_Beta_l / my_UE_list.getElement(u).Get_Required_DataRate();
 
         if (potential_satisfaction_of_Beta_l > 1)
             potential_satisfaction_of_Beta_l = 1;
 
         //連到Beta_w可提供的throughput
-        double potential_throughput_of_Beta_w = TDMA_Matrix[Beta_w][0] * RF_DataRate_Matrix[Beta_w][myUElist[u].GetID()];
+        double potential_throughput_of_Beta_w = TDMA_Matrix[Beta_w][0] * RF_DataRate_Matrix[Beta_w][my_UE_list.getElement(u).GetID()];
 
         //連到Beta_w可提供的滿意度,上限爲1
-        double potential_satisfaction_of_Beta_w = potential_throughput_of_Beta_w / myUElist[u].Get_Required_DataRate();
+        double potential_satisfaction_of_Beta_w = potential_throughput_of_Beta_w / my_UE_list.getElement(u).Get_Required_DataRate();
 
         if (potential_satisfaction_of_Beta_w > 1)
             potential_satisfaction_of_Beta_w = 1;
@@ -254,10 +255,10 @@ void Proposed_LB_state0(
         }
 
         //連到chosen ap
-        AP_Association_Matrix[Beta][myUElist[u].GetID()] = 1;
+        AP_Association_Matrix[Beta][my_UE_list.getElement(u).GetID()] = 1;
 
         //確定AP selection結果，記錄到myUElist中
-        myUElist[u].Set_Now_Associated_AP(Beta);
+        my_UE_list.getElement(u).Set_Now_Associated_AP(Beta);
 
         /* Resource Allocation Phase */
 
@@ -269,14 +270,14 @@ void Proposed_LB_state0(
             max_residual = 0;
 
         //這行的想法是 ρ(Beta,u) (要分配的資源量) =   ρ(Beta,0)(目前所剩資源量) - max_residual(分配後的剩餘資源量)
-        TDMA_Matrix[Beta][myUElist[u].GetID() + 1] = TDMA_Matrix[Beta][0] - max_residual;
+        TDMA_Matrix[Beta][my_UE_list.getElement(u).GetID() + 1] = TDMA_Matrix[Beta][0] - max_residual;
 
         //在myUElist[u]中更新分得時間比例
         //Note : 此時的值未必是最終值，之後再做residual resource allocation時也許會有變化
-        myUElist[u].Set_Time_Fraction(TDMA_Matrix[Beta][myUElist[u].GetID() + 1]);
+        my_UE_list.getElement(u).Set_Time_Fraction(TDMA_Matrix[Beta][my_UE_list.getElement(u).GetID() + 1]);
 
         //更新ρ(Beta,0)(目前所剩資源量) ，即要再扣掉剛剛分配的量，
-        TDMA_Matrix[Beta][0] -= TDMA_Matrix[Beta][myUElist[u].GetID() + 1];
+        TDMA_Matrix[Beta][0] -= TDMA_Matrix[Beta][my_UE_list.getElement(u).GetID() + 1];
     }
 
 #if DEBUG_MODE
@@ -299,19 +300,19 @@ void Proposed_LB_state0(
 
     //先將UElist 依照NodeID 小到大 sort
     //這樣是爲了for loop的index和Matrix的index對應，例如：index u = k 即代表 NodeID = k
-    sort(myUElist.begin(), myUElist.end(), [](My_UE_Node a, My_UE_Node b)
+    sort(my_UE_list.begin(), my_UE_list.end(), [](My_UE_Node a, My_UE_Node b)
          { return a.GetID() < b.GetID(); });
 
 //用參數 RESIDUAL_RA_METHOD 來控制要採用何種分配方法
 
 //1. maximize throughtput(MST)
 #if (RESIDUAL_RA_METHOD == 1)
-    MST(state, RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, AP_Association_Matrix, TDMA_Matrix, myUElist);
+    MST(state, RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, AP_Association_Matrix, TDMA_Matrix, my_UE_list);
 #endif
 
 //2. demand proportional(DP)
 #if (RESIDUAL_RA_METHOD == 2)
-    DP(state, RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, AP_Association_Matrix, TDMA_Matrix, myUElist);
+    DP(state, RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, AP_Association_Matrix, TDMA_Matrix, my_UE_list);
 #endif
 
 #if DEBUG_MODE
@@ -329,33 +330,33 @@ void Proposed_LB_state0(
 
     //將最後RA結果存回myUElist
     //APS結果已在前面就更新了
-    for (int ue_index = 0; ue_index < myUElist.size(); ue_index++)
+    for (int ue_index = 0; ue_index < my_UE_list.getSize(); ue_index++)
     {
         //抓出此UE連到哪個AP
-        int linked_ap = myUElist[ue_index].Get_Now_Associated_AP();
-
+        int linked_ap = my_UE_list.getElement(ue_index).Get_Now_Associated_AP();
+    
         //更新每個UE的time_fraction
-        myUElist[ue_index].Set_Time_Fraction(TDMA_Matrix[linked_ap][ue_index + 1]);
+        my_UE_list.getElement(ue_index).Set_Time_Fraction(TDMA_Matrix[linked_ap][ue_index + 1]);
 
         //存這回合的achievable datarate
         //若連到WiFi
         if (linked_ap < RF_AP_Num)
 
-            myUElist[ue_index].Add_Curr_iteration_Throughput(myUElist[ue_index].Get_Time_Fraction() * RF_DataRate_Matrix[linked_ap][ue_index]);
+            my_UE_list.getElement(ue_index).Add_Curr_iteration_Throughput(my_UE_list.getElement(ue_index).Get_Time_Fraction() * RF_DataRate_Matrix[linked_ap][ue_index]);
 
         //否則是連到LiFi
         else
 
-            myUElist[ue_index].Add_Curr_iteration_Throughput(myUElist[ue_index].Get_Time_Fraction() * VLC_DataRate_Matrix[linked_ap - RF_AP_Num][ue_index]);
+            my_UE_list.getElement(ue_index).Add_Curr_iteration_Throughput(my_UE_list.getElement(ue_index).Get_Time_Fraction() * VLC_DataRate_Matrix[linked_ap - RF_AP_Num][ue_index]);
 
         //update這一輪的滿意度
         //滿意度公式 : satisfication_level = min(1,achievable rate / required rate)
-        double Curr_satisfication_level = myUElist[ue_index].Get_Throughput_History().back() / myUElist[ue_index].Get_Required_DataRate();
+        double Curr_satisfication_level = my_UE_list.getElement(ue_index).Get_Throughput_History().back() / my_UE_list.getElement(ue_index).Get_Required_DataRate();
 
         if (Curr_satisfication_level > 1)
             Curr_satisfication_level = 1;
 
-        myUElist[ue_index].Add_Curr_satisfication_level(Curr_satisfication_level);
+        my_UE_list.getElement(ue_index).Add_Curr_satisfication_level(Curr_satisfication_level);
     }
 }
 
@@ -368,7 +369,7 @@ void Proposed_LB_stateN(
     std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
     std::vector<std::vector<int>> &AP_Association_Matrix,
     std::vector<std::vector<double>> &TDMA_Matrix,
-    std::vector<My_UE_Node> &myUElist)
+    MyUeList &my_UE_list)
 {
 
     //clear AP association matrix （新一輪的開始要重新算）
@@ -390,7 +391,7 @@ void Proposed_LB_stateN(
 
     //並根據Required datarate做大到小排序
     //爲了讓demand大的先挑
-    sort(myUElist.begin(), myUElist.end(), [](My_UE_Node a, My_UE_Node b)
+    sort(my_UE_list.begin(), my_UE_list.end(), [](My_UE_Node a, My_UE_Node b)
          { return a.Get_Required_DataRate() > b.Get_Required_DataRate(); });
 
     ////////////////////////////////
@@ -407,7 +408,7 @@ void Proposed_LB_stateN(
     /* AP selection Phase */
 
     //照demand 大->小順序,給每個UE挑
-    for (int u = 0; u < myUElist.size(); u++)
+    for (int u = 0; u < my_UE_list.getSize(); u++)
     {
 
         //先copy每個AP還剩下多少時間比例可以分給別人
@@ -423,16 +424,16 @@ void Proposed_LB_stateN(
 
         //算WiFi 部分
         for (int i = 0; i < RF_AP_Num; i++)
-
-            Avaliable_Resource_Matrix[i] -= myUElist[u].Get_Required_DataRate() /
-                                            (Handover_Efficiency_Matrix[myUElist[u].Get_Now_Associated_AP()][i] * RF_DataRate_Matrix[i][myUElist[u].GetID()]);
+        
+            Avaliable_Resource_Matrix[i] -= my_UE_list.getElement(u).Get_Required_DataRate() /
+                                            (Handover_Efficiency_Matrix[my_UE_list.getElement(u).Get_Now_Associated_AP()][i] * RF_DataRate_Matrix[i][my_UE_list.getElement(u).GetID()]);
         //用get_now_associated_ap是因爲這一輪還沒更新AP
 
         //算LiFi部分
         for (int i = 0; i < VLC_AP_Num; i++)
 
-            Avaliable_Resource_Matrix[i + RF_AP_Num] -= myUElist[u].Get_Required_DataRate() /
-                                                        (Handover_Efficiency_Matrix[myUElist[u].Get_Now_Associated_AP()][i + RF_AP_Num] * VLC_DataRate_Matrix[i][myUElist[u].GetID()]);
+            Avaliable_Resource_Matrix[i + RF_AP_Num] -= my_UE_list.getElement(u).Get_Required_DataRate() /
+                                                        (Handover_Efficiency_Matrix[my_UE_list.getElement(u).Get_Now_Associated_AP()][i + RF_AP_Num] * VLC_DataRate_Matrix[i][my_UE_list.getElement(u).GetID()]);
 
         //接下來要選max A-Q的AP，因爲我剩的資源越多，越有機會服務更多人
         //用Beta記錄max A-Q的AP
@@ -481,19 +482,19 @@ void Proposed_LB_stateN(
         /*又因爲同一個UE demand一樣，所以比較滿意度等同於比throughput 我們這邊簡單一點 比throughput就好*/
 
         //連到Beta_l可提供的throughput
-        double potential_throughput_of_Beta_l = TDMA_Matrix[Beta_l][0] * Handover_Efficiency_Matrix[myUElist[u].Get_Now_Associated_AP()][Beta_l] * VLC_DataRate_Matrix[Beta_l - RF_AP_Num][myUElist[u].GetID()];
+        double potential_throughput_of_Beta_l = TDMA_Matrix[Beta_l][0] * Handover_Efficiency_Matrix[my_UE_list.getElement(u).Get_Now_Associated_AP()][Beta_l] * VLC_DataRate_Matrix[Beta_l - RF_AP_Num][my_UE_list.getElement(u).GetID()];
 
         //連到Beta_l可提供的滿意度,上限爲1
-        double potential_satisfaction_of_Beta_l = potential_throughput_of_Beta_l / myUElist[u].Get_Required_DataRate();
+        double potential_satisfaction_of_Beta_l = potential_throughput_of_Beta_l / my_UE_list.getElement(u).Get_Required_DataRate();
 
         if (potential_satisfaction_of_Beta_l > 1)
             potential_satisfaction_of_Beta_l = 1;
 
         //連到Beta_w可提供的throughput
-        double potential_throughput_of_Beta_w = TDMA_Matrix[Beta_w][0] * Handover_Efficiency_Matrix[myUElist[u].Get_Now_Associated_AP()][Beta_w] * RF_DataRate_Matrix[Beta_w][myUElist[u].GetID()];
+        double potential_throughput_of_Beta_w = TDMA_Matrix[Beta_w][0] * Handover_Efficiency_Matrix[my_UE_list.getElement(u).Get_Now_Associated_AP()][Beta_w] * RF_DataRate_Matrix[Beta_w][my_UE_list.getElement(u).GetID()];
 
         //連到Beta_w可提供的滿意度,上限爲1
-        double potential_satisfaction_of_Beta_w = potential_throughput_of_Beta_w / myUElist[u].Get_Required_DataRate();
+        double potential_satisfaction_of_Beta_w = potential_throughput_of_Beta_w / my_UE_list.getElement(u).Get_Required_DataRate();
 
         if (potential_satisfaction_of_Beta_w > 1)
             potential_satisfaction_of_Beta_w = 1;
@@ -516,10 +517,10 @@ void Proposed_LB_stateN(
 
         //確定AP selection結果
         //連到Beta
-        AP_Association_Matrix[Beta][myUElist[u].GetID()] = 1;
+        AP_Association_Matrix[Beta][my_UE_list.getElement(u).GetID()] = 1;
 
         //更新：新的AP到myUElist
-        myUElist[u].Set_Now_Associated_AP(Beta);
+        my_UE_list.getElement(u).Set_Now_Associated_AP(Beta);
 
         /* Resource Allocation Phase */
 
@@ -531,14 +532,14 @@ void Proposed_LB_stateN(
             max_residual = 0;
 
         //這行的想法是 ρ(Beta,u) (要分配的資源量) =   ρ(Beta,0)(目前所剩資源量) - max_residual(分配後的剩餘資源量)
-        TDMA_Matrix[Beta][myUElist[u].GetID() + 1] = TDMA_Matrix[Beta][0] - max_residual;
+        TDMA_Matrix[Beta][my_UE_list.getElement(u).GetID() + 1] = TDMA_Matrix[Beta][0] - max_residual;
 
         //在myUElist[u]中更新分得時間比例
         //Note : 此時的值未必是最終值，之後再做residual resource allocation時也許會有變化
-        myUElist[u].Set_Time_Fraction(TDMA_Matrix[Beta][myUElist[u].GetID() + 1]);
+        my_UE_list.getElement(u).Set_Time_Fraction(TDMA_Matrix[Beta][my_UE_list.getElement(u).GetID() + 1]);
 
         //更新ρ(Beta,0)(目前所剩資源量) ，即要再扣掉剛剛分配的量，
-        TDMA_Matrix[Beta][0] -= TDMA_Matrix[Beta][myUElist[u].GetID() + 1];
+        TDMA_Matrix[Beta][0] -= TDMA_Matrix[Beta][my_UE_list.getElement(u).GetID() + 1];
     }
 
     ////////////////////////////////
@@ -551,19 +552,19 @@ void Proposed_LB_stateN(
 
     //將UElist 依照NodeID 小到大 sort
     //這樣是爲了for loop的index和Matrix的index對應，例如：index u = k 即代表 NodeID = k
-    sort(myUElist.begin(), myUElist.end(), [](My_UE_Node a, My_UE_Node b)
+    sort(my_UE_list.begin(), my_UE_list.end(), [](My_UE_Node a, My_UE_Node b)
          { return a.GetID() < b.GetID(); });
 
 //用參數 RESIDUAL_RA_METHOD 來控制要採用何種分配方法
 
 //1. maximize throughtput(MST)
 #if (RESIDUAL_RA_METHOD == 1)
-    MST(state, RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, AP_Association_Matrix, TDMA_Matrix, myUElist);
+    MST(state, RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, AP_Association_Matrix, TDMA_Matrix, my_UE_list);
 #endif
 
 //2. demand proportional(DP)
 #if (RESIDUAL_RA_METHOD == 2)
-    DP(state, RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, AP_Association_Matrix, TDMA_Matrix, myUElist);
+    DP(state, RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, AP_Association_Matrix, TDMA_Matrix, my_UE_list);
 #endif
 
 #if DEBUG_MODE
@@ -584,30 +585,30 @@ void Proposed_LB_stateN(
     for (int ue_index = 0; ue_index < UE_Num; ue_index++)
     {
         //抓出此UE連到哪個AP
-        int linked_ap = myUElist[ue_index].Get_Now_Associated_AP();
-
+        int linked_ap = my_UE_list.getElement(ue_index).Get_Now_Associated_AP();
+        
         //更新每個UE的time_fraction
-        myUElist[ue_index].Set_Time_Fraction(TDMA_Matrix[linked_ap][ue_index + 1]);
+        my_UE_list.getElement(ue_index).Set_Time_Fraction(TDMA_Matrix[linked_ap][ue_index + 1]);
 
         //存這回合的achievable datarate
         //若連到WiFi
         if (linked_ap < RF_AP_Num)
 
-            myUElist[ue_index].Add_Curr_iteration_Throughput(Handover_Efficiency_Matrix[myUElist[ue_index].Get_Prev_Associated_AP()][linked_ap] * myUElist[ue_index].Get_Time_Fraction() * RF_DataRate_Matrix[linked_ap][ue_index]);
+            my_UE_list.getElement(ue_index).Add_Curr_iteration_Throughput(Handover_Efficiency_Matrix[my_UE_list.getElement(ue_index).Get_Prev_Associated_AP()][linked_ap] * my_UE_list.getElement(ue_index).Get_Time_Fraction() * RF_DataRate_Matrix[linked_ap][ue_index]);
 
         //否則連到LiFi
         else // - RF_AP_Num是爲了對應到正確的VLC Matrix位置
 
-            myUElist[ue_index].Add_Curr_iteration_Throughput(Handover_Efficiency_Matrix[myUElist[ue_index].Get_Prev_Associated_AP()][linked_ap] * myUElist[ue_index].Get_Time_Fraction() * VLC_DataRate_Matrix[linked_ap - RF_AP_Num][ue_index]);
+           my_UE_list.getElement(ue_index).Add_Curr_iteration_Throughput(Handover_Efficiency_Matrix[my_UE_list.getElement(ue_index).Get_Prev_Associated_AP()][linked_ap] * my_UE_list.getElement(ue_index).Get_Time_Fraction() * VLC_DataRate_Matrix[linked_ap - RF_AP_Num][ue_index]);
 
         //update這一輪的滿意度
         //滿意度公式 : satisfication_level = min(1,achievable rate / required rate)
-        double Curr_satisfication_level = myUElist[ue_index].Get_Throughput_History().back() / myUElist[ue_index].Get_Required_DataRate();
+        double Curr_satisfication_level = my_UE_list.getElement(ue_index).Get_Throughput_History().back() /my_UE_list.getElement(ue_index).Get_Required_DataRate();
 
         if (Curr_satisfication_level > 1)
             Curr_satisfication_level = 1;
 
-        myUElist[ue_index].Add_Curr_satisfication_level(Curr_satisfication_level);
+        my_UE_list.getElement(ue_index).Add_Curr_satisfication_level(Curr_satisfication_level);
     }
 }
 
@@ -629,7 +630,7 @@ void MST(
     std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
     std::vector<std::vector<int>> &AP_Association_Matrix,
     std::vector<std::vector<double>> &TDMA_Matrix,
-    std::vector<My_UE_Node> &myUElist)
+    MyUeList &my_UE_list)
 {
 
     //檢查所有WiFi AP
@@ -668,10 +669,10 @@ void MST(
                     else
                     {
 
-                        if (Handover_Efficiency_Matrix[myUElist[ue].Get_Prev_Associated_AP()][i] * RF_DataRate_Matrix[i][ue] > best_rate)
+                        if (Handover_Efficiency_Matrix[my_UE_list.getElement(ue).Get_Prev_Associated_AP()][i] * RF_DataRate_Matrix[i][ue] > best_rate)
                         {
                             best_rate_user = ue;
-                            best_rate = Handover_Efficiency_Matrix[myUElist[ue].Get_Prev_Associated_AP()][i] * RF_DataRate_Matrix[i][ue];
+                            best_rate = Handover_Efficiency_Matrix[my_UE_list.getElement(ue).Get_Prev_Associated_AP()][i] * RF_DataRate_Matrix[i][ue];
                         }
                     }
                 }
@@ -682,13 +683,13 @@ void MST(
             if (best_rate_user > -1)
             {
                 //剩下的資源全數分給best_rate_user
-                //ue best_rate_user 對應到 在TDMA_Matrix的index是 best_rate_user+1，因爲TDMA_Matrix[i][0]另作它用，TDMA_Matrix[i][1]才是屬於 myUElist[0]
+                //ue best_rate_user 對應到 在TDMA_Matrix的index是 best_rate_user+1，因爲TDMA_Matrix[i][0]另作它用，TDMA_Matrix[i][1]才是屬於 my_UE_list[0]
                 TDMA_Matrix[i][best_rate_user + 1] += TDMA_Matrix[i][0];
 
                 //在myUElist[best_rate_user]中更新分得時間比例
                 //Note : 此時的值即是最終值
-                myUElist[best_rate_user].Set_Time_Fraction(TDMA_Matrix[i][best_rate_user + 1]);
-
+                my_UE_list.getElement(best_rate_user).Set_Time_Fraction(TDMA_Matrix[i][best_rate_user + 1]);
+                
                 //分完就沒了
                 TDMA_Matrix[i][0] = 0;
             }
@@ -728,10 +729,10 @@ void MST(
                     }
                     else
                     {
-                        if (Handover_Efficiency_Matrix[myUElist[ue].Get_Prev_Associated_AP()][i + RF_AP_Num] * VLC_DataRate_Matrix[i][ue] > best_rate)
+                        if (Handover_Efficiency_Matrix[my_UE_list.getElement(ue).Get_Prev_Associated_AP()][i + RF_AP_Num] * VLC_DataRate_Matrix[i][ue] > best_rate)
                         {
                             best_rate_user = ue;
-                            best_rate = Handover_Efficiency_Matrix[myUElist[ue].Get_Prev_Associated_AP()][i + RF_AP_Num] * VLC_DataRate_Matrix[i][ue];
+                            best_rate = Handover_Efficiency_Matrix[my_UE_list.getElement(ue).Get_Prev_Associated_AP()][i + RF_AP_Num] * VLC_DataRate_Matrix[i][ue];
                         }
                     }
                 }
@@ -746,7 +747,7 @@ void MST(
 
                 //在myUElist[best_rate_user]中更新分得時間比例
                 //Note : 此時的值即是最終值
-                myUElist[best_rate_user].Set_Time_Fraction(TDMA_Matrix[i + RF_AP_Num][best_rate_user + 1]);
+                my_UE_list.getElement(best_rate_user).Set_Time_Fraction(TDMA_Matrix[i + RF_AP_Num][best_rate_user + 1]);
 
                 //分完就沒了
                 TDMA_Matrix[i + RF_AP_Num][0] = 0;
@@ -766,7 +767,7 @@ void DP(
     std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
     std::vector<std::vector<int>> &AP_Association_Matrix,
     std::vector<std::vector<double>> &TDMA_Matrix,
-    std::vector<My_UE_Node> &myUElist)
+    MyUeList &my_UE_list)
 {
 
     //檢查所有WiFi AP
@@ -796,20 +797,20 @@ void DP(
                     {
 
                         //則更新分母
-                        Denominator += myUElist[ue].Get_Required_DataRate() / RF_DataRate_Matrix[i][ue];
+                        Denominator += my_UE_list.getElement(ue).Get_Required_DataRate() / RF_DataRate_Matrix[i][ue];
 
                         //更新該ue的分子
-                        WeightofUE[ue] = myUElist[ue].Get_Required_DataRate() / RF_DataRate_Matrix[i][ue];
+                        WeightofUE[ue] = my_UE_list.getElement(ue).Get_Required_DataRate() / RF_DataRate_Matrix[i][ue];
                     }
                     //非初始state則需要多考慮handover
                     else
                     {
 
                         //更新分母
-                        Denominator += (myUElist[ue].Get_Required_DataRate() / Handover_Efficiency_Matrix[myUElist[ue].Get_Prev_Associated_AP()][i] * RF_DataRate_Matrix[i][ue]);
+                        Denominator += (my_UE_list.getElement(ue).Get_Required_DataRate() / Handover_Efficiency_Matrix[my_UE_list.getElement(ue).Get_Prev_Associated_AP()][i] * RF_DataRate_Matrix[i][ue]);
 
                         //更新該ue的分子
-                        WeightofUE[ue] = (myUElist[ue].Get_Required_DataRate() / Handover_Efficiency_Matrix[myUElist[ue].Get_Prev_Associated_AP()][i] * RF_DataRate_Matrix[i][ue]);
+                        WeightofUE[ue] = (my_UE_list.getElement(ue).Get_Required_DataRate() / Handover_Efficiency_Matrix[my_UE_list.getElement(ue).Get_Prev_Associated_AP()][i] * RF_DataRate_Matrix[i][ue]);
                     }
                 }
             }
@@ -823,9 +824,9 @@ void DP(
 
                 //在myUElist[it->first]中更新分得時間比例
                 //Note : 此時的值即是最終值
-                myUElist[it->first].Set_Time_Fraction(TDMA_Matrix[i][it->first + 1]);
+                my_UE_list.getElement(it->first).Set_Time_Fraction(TDMA_Matrix[i][it->first + 1]);
             }
-
+            
             //剩餘的資源皆分完
             TDMA_Matrix[i][0] = 0;
         }
@@ -854,21 +855,21 @@ void DP(
                     //初始state不必考慮handover
                     if (state == 0)
                     {
-
+                        
                         //更新分母
-                        Denominator += myUElist[ue].Get_Required_DataRate() / VLC_DataRate_Matrix[i][ue];
+                        Denominator += my_UE_list.getElement(ue).Get_Required_DataRate() / VLC_DataRate_Matrix[i][ue];
 
                         //更新該ue的分子
-                        WeightofUE[ue] = myUElist[ue].Get_Required_DataRate() / VLC_DataRate_Matrix[i][ue];
+                        WeightofUE[ue] = my_UE_list.getElement(ue).Get_Required_DataRate() / VLC_DataRate_Matrix[i][ue];
                     }
                     //非初始state則需要多考慮handover
                     else
                     {
                         //更新分母
-                        Denominator += myUElist[ue].Get_Required_DataRate() / (Handover_Efficiency_Matrix[myUElist[ue].Get_Prev_Associated_AP()][i + RF_AP_Num] * VLC_DataRate_Matrix[i][ue]);
+                        Denominator += my_UE_list.getElement(ue).Get_Required_DataRate() / (Handover_Efficiency_Matrix[my_UE_list.getElement(ue).Get_Prev_Associated_AP()][i + RF_AP_Num] * VLC_DataRate_Matrix[i][ue]);
 
                         //更新該ue的分子
-                        WeightofUE[ue] = myUElist[ue].Get_Required_DataRate() / (Handover_Efficiency_Matrix[myUElist[ue].Get_Prev_Associated_AP()][i + RF_AP_Num] * VLC_DataRate_Matrix[i][ue]);
+                        WeightofUE[ue] = my_UE_list.getElement(ue).Get_Required_DataRate() / (Handover_Efficiency_Matrix[my_UE_list.getElement(ue).Get_Prev_Associated_AP()][i + RF_AP_Num] * VLC_DataRate_Matrix[i][ue]);
                     }
                 }
             }
@@ -881,9 +882,9 @@ void DP(
 
                 //在myUElist[it->first]中更新分得時間比例
                 //Note : 此時的值即是最終值
-                myUElist[it->first].Set_Time_Fraction(TDMA_Matrix[i + RF_AP_Num][it->first + 1]);
+                my_UE_list.getElement(it->first).Set_Time_Fraction(TDMA_Matrix[i + RF_AP_Num][it->first + 1]);
             }
-
+        
             //剩餘的資源皆分完
             TDMA_Matrix[i + RF_AP_Num][0] = 0;
         }

@@ -50,6 +50,7 @@
 #include "print.h"
 #include "DynamicLB.h"
 #include "ProposedMethod.h"
+#include "My_UE_List.h";
 
 using namespace ns3;
 // using namespace std;
@@ -116,7 +117,7 @@ static void RxEndAddress(Ptr<const Packet> p, const Address &address)
 // }
 
 void Dynamic_Update_to_NextState(NodeContainer &RF_AP_Nodes, NodeContainer &VLC_AP_Nodes,
-								 NodeContainer &UE_Nodes, std::vector<My_UE_Node> &myUElist)
+								 NodeContainer &UE_Nodes, MyUeList &my_UE_list)
 {
 
 #if (PROPOSED_METHOD) //我的做法
@@ -125,7 +126,7 @@ void Dynamic_Update_to_NextState(NodeContainer &RF_AP_Nodes, NodeContainer &VLC_
 					   RF_Channel_Gain_Matrix, VLC_Channel_Gain_Matrix,
 					   RF_SINR_Matrix, VLC_SINR_Matrix,
 					   RF_DataRate_Matrix, VLC_DataRate_Matrix,
-					   Handover_Efficiency_Matrix, AP_Association_Matrix, TDMA_Matrix, myUElist);
+					   Handover_Efficiency_Matrix, AP_Association_Matrix, TDMA_Matrix, my_UE_list);
 
 #else //Benchmark的做法
 
@@ -133,7 +134,7 @@ void Dynamic_Update_to_NextState(NodeContainer &RF_AP_Nodes, NodeContainer &VLC_
 						RF_Channel_Gain_Matrix, VLC_Channel_Gain_Matrix,
 						RF_SINR_Matrix, VLC_SINR_Matrix,
 						RF_DataRate_Matrix, VLC_DataRate_Matrix,
-						Handover_Efficiency_Matrix, AP_Association_Matrix, myUElist);
+						Handover_Efficiency_Matrix, AP_Association_Matrix, my_UE_list);
 
 #endif
 
@@ -211,7 +212,7 @@ int main(int argc, char *argv[])
 #endif
 
 	//生成自定義的UE list
-	std::vector<My_UE_Node> myUEList = Initialize_My_UE_Node_List(UE_Nodes);
+	MyUeList my_UE_list(UE_Nodes);
 
 	/** add ip/tcp stack to all nodes.**/
 	// InternetStackHelper internet;
@@ -291,7 +292,7 @@ int main(int argc, char *argv[])
 	//   }
 	// }
 
-	Simulator::Schedule(Seconds(0.0), &Dynamic_Update_to_NextState, RF_AP_Nodes, VLC_AP_Nodes, UE_Nodes, myUEList);
+	Simulator::Schedule(Seconds(0.0), &Dynamic_Update_to_NextState, RF_AP_Nodes, VLC_AP_Nodes, UE_Nodes, my_UE_list);
 	Simulator::Stop(Minutes(2));
 	Simulator::Run();
 
@@ -321,8 +322,8 @@ int main(int argc, char *argv[])
 
 	for (int i = 0; i < UE_Num; i++)
 	{
-		square_of_sum += recorded_avg_throughput_per_UE[i] / myUEList[i].Get_Required_DataRate();
-		sum_of_square += pow(recorded_avg_throughput_per_UE[i] / myUEList[i].Get_Required_DataRate(), 2);
+		square_of_sum += recorded_avg_throughput_per_UE[i] / my_UE_list[i].Get_Required_DataRate();
+		sum_of_square += pow(recorded_avg_throughput_per_UE[i] / my_UE_list[i].Get_Required_DataRate(), 2);
 	}
 	square_of_sum = pow(square_of_sum, 2);
 

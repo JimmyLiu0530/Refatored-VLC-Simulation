@@ -2,6 +2,7 @@
 #define PROPOSED_METHOD_H
 
 #include "My_UE_Node.h"
+#include "MY_UE_List.h"
 
 void Proposed_DynamicLB(
     int &state,
@@ -17,7 +18,7 @@ void Proposed_DynamicLB(
     std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
     std::vector<std::vector<int>> &AP_Association_Matrix,
     std::vector<std::vector<double>> &TDMA_Matrix,
-    std::vector<My_UE_Node> &myUElist);
+    MyUeList &my_UE_list);
 
 void Proposed_LB_state0(
     int &state,
@@ -26,7 +27,7 @@ void Proposed_LB_state0(
     std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
     std::vector<std::vector<int>> &AP_Association_Matrix,
     std::vector<std::vector<double>> &TDMA_Matrix,
-    std::vector<My_UE_Node> &myUElist);
+    MyUeList &my_UE_list);
 
 void Proposed_LB_stateN(
     int &state,
@@ -35,7 +36,7 @@ void Proposed_LB_stateN(
     std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
     std::vector<std::vector<int>> &AP_Association_Matrix,
     std::vector<std::vector<double>> &TDMA_Matrix,
-    std::vector<My_UE_Node> &myUElist);
+    MyUeList &my_UE_list);
 
 void MST(
     int &state,
@@ -44,7 +45,7 @@ void MST(
     std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
     std::vector<std::vector<int>> &AP_Association_Matrix,
     std::vector<std::vector<double>> &TDMA_Matrix,
-    std::vector<My_UE_Node> &myUElist);
+    MyUeList &my_UE_list);
 
 void DP(
     int &state,
@@ -53,6 +54,6 @@ void DP(
     std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
     std::vector<std::vector<int>> &AP_Association_Matrix,
     std::vector<std::vector<double>> &TDMA_Matrix,
-    std::vector<My_UE_Node> &myUElist);
+    MyUeList &my_UE_list);
 
 #endif

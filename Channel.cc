@@ -7,7 +7,6 @@
 #include <fstream>
 #include <string>
 #include <chrono> //seed
-#include <cmath>
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
@@ -107,7 +106,7 @@ double Estimate_one_VLC_Channel_Gain(Ptr<Node> VLC_AP, Ptr<Node> UE)
 	//入射角
 	double incidence_angle = Get_Incidence_Angle_AP_UE(VLC_AP, UE);
 
-	double VLC_concentrator_gain = pow(VLC_refractive_index, 2) / pow(sin(DegtoRad(VLC_field_of_view / 2)), 2);
+	double VLC_concentrator_gain = pow(VLC_refractive_index, 2) / pow(sin((DegtoRad(VLC_field_of_view / 2))), 2);
 
 	if (RadtoDeg(incidence_angle) >= VLC_field_of_view / 2)
 		VLC_concentrator_gain = 0;
