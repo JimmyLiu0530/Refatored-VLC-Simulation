@@ -22,8 +22,6 @@ public:
                 std::vector<std::vector<double>> &TDMA_Matrix,
                 MyUeList &my_UE_list);
     
-    
-    
 private:
     void precalculate(NodeContainer &RF_AP_Node,
                         NodeContainer &VLC_AP_Nodes,
