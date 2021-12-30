@@ -85,8 +85,8 @@ static const uint32_t writeSize = 1040;
 static int state = 0;
 uint8_t data[writeSize];
 
-BenchmarkLoadBalanceMethod benchmark;
-ProposedLoadBalanceMethod proposed;
+LoadBalanceMethod *benchmark = new BenchmarkLoadBalanceMethod();
+LoadBalanceMethod *proposed = new ProposedLoadBalanceMethod();
 
 void StartFlow(Ptr<Socket>, Ipv4Address, uint16_t);
 void WriteUntilBufferFull(Ptr<Socket>, uint32_t);
@@ -128,7 +128,7 @@ void Dynamic_Update_to_NextState(NodeContainer &RF_AP_Nodes, NodeContainer &VLC_
 
 #if (PROPOSED_METHOD) //我的做法
 
-	proposed.execute(state, RF_AP_Nodes, VLC_AP_Nodes, UE_Nodes,
+	proposed->execute(state, RF_AP_Nodes, VLC_AP_Nodes, UE_Nodes,
 					   RF_Channel_Gain_Matrix, VLC_Channel_Gain_Matrix,
 					   RF_SINR_Matrix, VLC_SINR_Matrix,
 					   RF_DataRate_Matrix, VLC_DataRate_Matrix,
@@ -136,7 +136,7 @@ void Dynamic_Update_to_NextState(NodeContainer &RF_AP_Nodes, NodeContainer &VLC_
 
 #else //Benchmark的做法
 
-	benchmark.execute(state, RF_AP_Nodes, VLC_AP_Nodes, UE_Nodes,
+	benchmark->execute(state, RF_AP_Nodes, VLC_AP_Nodes, UE_Nodes,
 						RF_Channel_Gain_Matrix, VLC_Channel_Gain_Matrix,
 						RF_SINR_Matrix, VLC_SINR_Matrix,
 						RF_DataRate_Matrix, VLC_DataRate_Matrix,
