@@ -5,7 +5,7 @@
 
 Matrix::Matrix(int row_size, int col_size) : row_size(row_size), col_size(col_size) 
 {
-    matrix.resize(row_size, vector<double>(col_size));
+    matrix.resize(row_size, vector<double>(col_size, 0));
 }
 
 
