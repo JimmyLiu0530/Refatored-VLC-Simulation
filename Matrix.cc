@@ -9,13 +9,13 @@ Matrix::Matrix(int row_size, int col_size) : row_size(row_size), col_size(col_si
 }
 
 
-void Matrix<T>::setElement(int i, int j, double value)
+void Matrix::setElement(int i, int j, double value)
 {
     matrix[i][j] = value;
 }
 
 
-double Matrix<T>::getElement(int i, int j) 
+double Matrix::getElement(int i, int j) 
 {
     return matrix[i][j];
 }
