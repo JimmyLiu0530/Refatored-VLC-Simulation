@@ -33,7 +33,6 @@ void LoadBalanceMethod::execute(int &state,
                         RF_DataRate_Matrix,
                         VLC_DataRate_Matrix,
                         AP_Association_Matrix,
-                        Handover_Efficiency_Matrix,
                         TDMA_Matrix,
                         my_UE_list);
         

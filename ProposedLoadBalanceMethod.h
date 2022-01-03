@@ -12,7 +12,6 @@ private:
                                 RfDataRateMatrix &RF_DataRate_Matrix,
                                 VlcDataRateMatrix &VLC_DataRate_Matrix,
                                 AssociationMatrix &AP_Association_Matrix,
-                                HandoverEfficiencyMatrix &Handover_Efficiency_Matrix,
                                 TDMAMatrix &TDMA_Matrix,
                                 MyUeList &my_UE_list);
     virtual void DoAllocateStateN(int &state,

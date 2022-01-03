@@ -12,7 +12,6 @@ void ProposedLoadBalanceMethod::DoAllocateState0(int &state,
                                                 RfDataRateMatrix &RF_data_rate_matrix,
                                                 VlcDataRateMatrix &VLC_data_rate_matrix,
                                                 AssociationMatrix &AP_association_matrix,
-                                                HandoverEfficiencyMatrix &handover_efficiency_matrix,
                                                 TDMAMatrix &TDMA_matrix,
                                                 MyUeList &my_UE_list) 
 {
@@ -53,8 +52,7 @@ void ProposedLoadBalanceMethod::DoAllocateState0(int &state,
         /** 計算A-Q 這裏我們用A matrix扣掉相對應的Q **/
         //其意義：如果UE u 連到AP i且分得恰可滿足demand的資源後, AP i還會剩下多少residual resource
         //Note : 注意sort過後的index u未必是原本的UE Node ID
-        available_resource_matrix.allocate(u, my_UE_list, RF_data_rate_matrix);
-        available_resource_matrix.allocate(u, my_UE_list, VLC_data_rate_matrix);
+        available_resource_matrix.allocate(u, my_UE_list, RF_data_rate_matrix, VLC_data_rate_matrix);
     
         //接下來要選max A-Q的AP，因爲我剩的資源越多，越有機會服務更多人
         double max_residual = 0;

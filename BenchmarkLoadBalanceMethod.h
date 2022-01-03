@@ -12,9 +12,9 @@ private:
                                 std::vector<std::vector<double>> &RF_DataRate_Matrix,
                                 std::vector<std::vector<double>> &VLC_DataRate_Matrix,
                                 std::vector<std::vector<int>> &AP_Association_Matrix,
-                                std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
                                 std::vector<std::vector<double>> &TDMA_Matrix,
                                 MyUeList &my_UE_list);
+                                
     virtual void DoAllocateStateN(int &state,
                                 std::vector<std::vector<double>> &RF_DataRate_Matrix,
                                 std::vector<std::vector<double>> &VLC_DataRate_Matrix,
