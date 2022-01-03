@@ -12,38 +12,40 @@ private:
                                 RfDataRateMatrix &RF_DataRate_Matrix,
                                 VlcDataRateMatrix &VLC_DataRate_Matrix,
                                 AssociationMatrix &AP_Association_Matrix,
+                                HandoverEfficiencyMatrix &handover_efficiency_matrix,
                                 TDMAMatrix &TDMA_Matrix,
                                 MyUeList &my_UE_list);
+
     virtual void DoAllocateStateN(int &state,
-                                std::vector<std::vector<double>> &RF_DataRate_Matrix,
-                                std::vector<std::vector<double>> &VLC_DataRate_Matrix,
-                                std::vector<std::vector<int>> &AP_Association_Matrix,
-                                std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
-                                std::vector<std::vector<double>> &TDMA_Matrix,
+                                RfDataRateMatrix &RF_data_rate_matrix,
+                                VlcDataRateMatrix &VLC_data_rate_matrix,
+                                AssociationMatrix &AP_association_matrix,
+                                HandoverEfficiencyMatrix &handover_efficiency_matrix,
+                                TDMAMatrix &TDMA_matrix,
                                 MyUeList &my_UE_list);
     
     void ResidualResourceAllocate(int &state,
-                                std::vector<std::vector<double>> &RF_DataRate_Matrix,
-                                std::vector<std::vector<double>> &VLC_DataRate_Matrix,
-                                std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
-                                std::vector<std::vector<int>> &AP_Association_Matrix,
-                                std::vector<std::vector<double>> &TDMA_Matrix,
+                                RfDataRateMatrix &RF_data_rate_matrix,
+                                VlcDataRateMatrix &VLC_data_rate_matrix,
+                                AssociationMatrix &AP_association_matrix,
+                                HandoverEfficiencyMatrix &handover_efficiency_matrix,
+                                TDMAMatrix &TDMA_matrix,
                                 MyUeList &my_UE_list);
 
     void MST(int &state,
-            std::vector<std::vector<double>> &RF_DataRate_Matrix,
-            std::vector<std::vector<double>> &VLC_DataRate_Matrix,
-            std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
-            std::vector<std::vector<int>> &AP_Association_Matrix,
-            std::vector<std::vector<double>> &TDMA_Matrix,
+            RfDataRateMatrix &RF_data_rate_matrix,
+            VlcDataRateMatrix &VLC_data_rate_matrix,
+            AssociationMatrix &AP_association_matrix,
+            HandoverEfficiencyMatrix &handover_efficiency_matrix,
+            TDMAMatrix &TDMA_matrix,
             MyUeList &my_UE_list);
-    
+
     void DP(int &state,
-            std::vector<std::vector<double>> &RF_DataRate_Matrix,
-            std::vector<std::vector<double>> &VLC_DataRate_Matrix,
-            std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
-            std::vector<std::vector<int>> &AP_Association_Matrix,
-            std::vector<std::vector<double>> &TDMA_Matrix,
+            RfDataRateMatrix &RF_data_rate_matrix,
+            VlcDataRateMatrix &VLC_data_rate_matrix,
+            AssociationMatrix &AP_association_matrix,
+            HandoverEfficiencyMatrix &handover_efficiency_matrix,
+            TDMAMatrix &TDMA_matrix,
             MyUeList &my_UE_list);
 
         
