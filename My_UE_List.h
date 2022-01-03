@@ -27,7 +27,6 @@ public:
 
 private: 
     std::vector<My_UE_Node> UE_list;
-    
 };
 
 #endif

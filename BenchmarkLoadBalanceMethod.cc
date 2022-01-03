@@ -200,9 +200,9 @@ void BenchmarkLoadBalanceMethod::ApAssociateStateN(RfDataRateMatrix &RF_data_rat
 	}
 
 	/** AP selection 完成 保存結果 **/
-	Benchmark_Update_APSelection_Result(my_UE_list, beta_u, served_UE_Num, AP_Association_Matrix);
+	Benchmark_Update_APSelection_Result(my_UE_list, beta_u, served_UE_Num, AP_association_matrix);
 
-    ResourceAllocateStateN(RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, my_UE_list, beta_u, served_UE_Num);
+    ResourceAllocateStateN(RF_data_rate_matrix, VLC_data_rate_matrix, handover_efficiency_matrix, my_UE_list, beta_u, served_UE_Num);
 }
 
 void BenchmarkLoadBalanceMethod::ResourceAllocateState0(RfDataRateMatrix &RF_data_rate_matrix,
@@ -237,11 +237,11 @@ void BenchmarkLoadBalanceMethod::ResourceAllocateState0(RfDataRateMatrix &RF_dat
 
 		if (beta_u[ue_index] < RF_AP_Num)
 
-			Throughput[ue_index] = RF_DataRate_Matrix[beta_u[ue_index]][ue_index] / served_UE_Num[beta_u[ue_index]];
+			Throughput[ue_index] = RF_data_rate_matrix[beta_u[ue_index]][ue_index] / served_UE_Num[beta_u[ue_index]];
 
 		else
 
-			Throughput[ue_index] = VLC_DataRate_Matrix[beta_u[ue_index] - RF_AP_Num][ue_index] / served_UE_Num[beta_u[ue_index]];
+			Throughput[ue_index] = RF_data_rate_matrix[beta_u[ue_index] - RF_AP_Num][ue_index] / served_UE_Num[beta_u[ue_index]];
 	}
 
 	Benchmark_Update_RA_Result(my_UE_list, Throughput);
