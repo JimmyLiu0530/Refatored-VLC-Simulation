@@ -31,6 +31,28 @@ void AvailableResourceMatrix::allocate(int u, MyUeList &my_UE_list, RfDataRateMa
     }
 }
 
+void AvailableResourceMatrix::allocate(int u, MyUeList &my_UE_list, RfDataRateMatrix &RF_data_rate_matrix, VlcDataRateMatrix &VLC_data_rate_matrix, HandoverEfficiencyMatrix &handover_efficiency_matrix)
+{
+    for (int i = 0; i < RF_AP_Num; i++) {
+        int curr_AP = my_UE_list.getElement(u).Get_Now_Associated_AP();
+        int curr_UE = my_UE_list.getElement(u).GetID();
+
+        double tmp = my_UE_list.getElement(u).Get_Required_DataRate() / (handover_efficiency_matrix.getElement(curr_AP, i) * RF_data_rate_matrix.getElement(i, curr_UE));
+
+        setElement(0, i, (getElement(0, i) - tmp));
+    }
+
+    for (int i = 0; i < VLC_AP_Num; i++) {
+        int curr_AP = my_UE_list.getElement(u).Get_Now_Associated_AP();
+        int curr_UE = my_UE_list.getElement(u).GetID();
+
+        double tmp = my_UE_list.getElement(u).Get_Required_DataRate() / (handover_efficiency_matrix.getElement(curr_AP, i) * VLC_data_rate_matrix.getElement(i, curr_UE));
+
+        setElement(1, i, (getElement(1, i) - tmp));
+    }
+}
+
+
 double AvailableResourceMatrix::findBestAP(int u, RfDataRateMatrix &RF_data_rate_matrix, VlcDataRateMatrix &VLC_data_rate_matrix, MyUeList &my_UE_list, TDMAMatrix &TDMA_matrix, AssociationMatrix &AP_association_matrix)
 {
     int Beta_w = findMaxResidualRfAP();
@@ -38,6 +60,33 @@ double AvailableResourceMatrix::findBestAP(int u, RfDataRateMatrix &RF_data_rate
 
     double potential_satisfaction_of_Beta_w = estimateSatisfaction(u, Beta_w, RF_data_rate_matrix, my_UE_list, TDMA_matrix);
     double potential_satisfaction_of_Beta_l = estimateSatisfaction(u, Beta_l, VLC_data_rate_matrix, my_UE_list, TDMA_matrix);
+
+    int best_AP = -1;
+    int max_residual = 0;
+    if (potential_satisfaction_of_Beta_w > potential_satisfaction_of_Beta_l) {
+        best_AP = Beta_w;
+        max_residual = getElement(0, Beta_w);
+    }
+    else {
+        best_AP = Beta_l;
+        max_residual = getElement(1, Beta_l);
+    }
+
+    AP_association_matrix.associate(best_AP, my_UE_list.getElement(u).GetID());
+    my_UE_list.getElement(u).Set_Now_Associated_AP(best_AP);
+
+    return max_residual;
+}
+
+
+double AvailableResourceMatrix::findBestAP(int u, RfDataRateMatrix &RF_data_rate_matrix, VlcDataRateMatrix &VLC_data_rate_matrix, MyUeList &my_UE_list, TDMAMatrix &TDMA_matrix, 
+                                            AssociationMatrix &AP_association_matrix, HandoverEfficiencyMatrix &handover_efficiency_matrix)
+{
+    int Beta_w = findMaxResidualRfAP();
+    int Beta_l = findMaxResidualVlcAP();
+
+    double potential_satisfaction_of_Beta_w = estimateSatisfaction(u, Beta_w, RF_data_rate_matrix, my_UE_list, TDMA_matrix, handover_efficiency_matrix);
+    double potential_satisfaction_of_Beta_l = estimateSatisfaction(u, Beta_l, VLC_data_rate_matrix, my_UE_list, TDMA_matrix, handover_efficiency_matrix);
 
     int best_AP = -1;
     int max_residual = 0;
@@ -97,17 +146,20 @@ int AvailableResourceMatrix::findMaxResidualVlcAP()
     return Beta_l;
 }
 
-double AvailableResourceMatrix::estimateSatisfaction(int u, int Beta_w, RfDataRateMatrix &RF_data_rate_matrix, MyUeList &my_UE_list, TDMAMatrix &TDMA_matrix)
+double AvailableResourceMatrix::estimateSatisfaction(int u, int Beta, Matrix &data_rate_matrix, MyUeList &my_UE_list, TDMAMatrix &TDMA_matrix)
 {
-    double potential_throughput = TDMA_matrix.getElement(Beta_w, 0) * RF_data_rate_matrix.getElement(Beta_w, my_UE_list.getElement(u).GetID());
+    double potential_throughput = TDMA_matrix.getElement(Beta, 0) * data_rate_matrix.getElement(Beta, my_UE_list.getElement(u).GetID());
     double potential_satisfaction = potential_throughput / my_UE_list.getElement(u).Get_Required_DataRate();
 
     return ((potential_satisfaction > 1) ? 1 : potential_satisfaction);
 }
 
-double AvailableResourceMatrix::estimateSatisfaction(int u, int Beta_l, VlcDataRateMatrix &VLC_data_rate_matrix, MyUeList &my_UE_list, TDMAMatrix &TDMA_matrix)
+double AvailableResourceMatrix::estimateSatisfaction(int u, int Beta, Matrix &data_rate_matrix, MyUeList &my_UE_list, TDMAMatrix &TDMA_matrix, HandoverEfficiencyMatrix &handover_efficiency_matrix)
 {
-    double potential_throughput = TDMA_matrix.getElement(Beta_l, 0) * VLC_data_rate_matrix.getElement(Beta_l, my_UE_list.getElement(u).GetID());
+    int curr_AP = my_UE_list.getElement(u).Get_Now_Associated_AP();
+    int curr_UE = my_UE_list.getElement(u).GetID();
+
+    double potential_throughput = TDMA_matrix.getElement(Beta, 0) * handover_efficiency_matrix.getElement(curr_AP, Beta) * data_rate_matrix.getElement(Beta, curr_UE);
     double potential_satisfaction = potential_throughput / my_UE_list.getElement(u).Get_Required_DataRate();
 
     return ((potential_satisfaction > 1) ? 1 : potential_satisfaction);
