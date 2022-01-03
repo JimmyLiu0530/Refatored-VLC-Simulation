@@ -5,7 +5,7 @@
 #include "AssociationMatrix.h"
 
 
-void AvailableResourceMatrix::update(TDMAMatrix TDMA_matrix)
+void AvailableResourceMatrix::update(TDMAMatrix &TDMA_matrix)
 {
     //每當一個UE挑完AP的後,A Matrix的情況都會變化，所以每次都要更新最新的情況
     for (int i = 0; i < RF_AP_Num; i++)
@@ -16,7 +16,7 @@ void AvailableResourceMatrix::update(TDMAMatrix TDMA_matrix)
 
 }
 
-void AvailableResourceMatrix::allocate(int u, MyUeList my_UE_list, RfDataRateMatrix RF_data_rate_matrix, VlcDataRateMatrix VLC_data_rate_matrix)
+void AvailableResourceMatrix::allocate(int u, MyUeList &my_UE_list, RfDataRateMatrix &RF_data_rate_matrix, VlcDataRateMatrix &VLC_data_rate_matrix)
 {
     for (int i = 0; i < RF_AP_Num; i++) {
         double tmp = my_UE_list.getElement(u).Get_Required_DataRate() / RF_data_rate_matrix.getElement(i, my_UE_list.getElement(u).GetID());
@@ -31,7 +31,7 @@ void AvailableResourceMatrix::allocate(int u, MyUeList my_UE_list, RfDataRateMat
     }
 }
 
-double AvailableResourceMatrix::findBestAP(int u, RfDataRateMatrix RF_data_rate_matrix, VlcDataRateMatrix VLC_data_rate_matrix, MyUeList my_UE_list, TDMAMatrix TDMA_matrix, AssociationMatrix AP_association_matrix)
+double AvailableResourceMatrix::findBestAP(int u, RfDataRateMatrix &RF_data_rate_matrix, VlcDataRateMatrix &VLC_data_rate_matrix, MyUeList &my_UE_list, TDMAMatrix &TDMA_matrix, AssociationMatrix &AP_association_matrix)
 {
     int Beta_w = findMaxResidualRfAP();
     int Beta_l = findMaxResidualVlcAP();
@@ -97,7 +97,7 @@ int AvailableResourceMatrix::findMaxResidualVlcAP()
     return Beta_l;
 }
 
-double AvailableResourceMatrix::estimateSatisfaction(int u, int Beta_w, RfDataRateMatrix RF_data_rate_matrix, MyUeList my_UE_list, TDMAMatrix TDMA_matrix)
+double AvailableResourceMatrix::estimateSatisfaction(int u, int Beta_w, RfDataRateMatrix &RF_data_rate_matrix, MyUeList &my_UE_list, TDMAMatrix &TDMA_matrix)
 {
     double potential_throughput = TDMA_matrix.getElement(Beta_w, 0) * RF_data_rate_matrix.getElement(Beta_w, my_UE_list.getElement(u).GetID());
     double potential_satisfaction = potential_throughput / my_UE_list.getElement(u).Get_Required_DataRate();
@@ -105,7 +105,7 @@ double AvailableResourceMatrix::estimateSatisfaction(int u, int Beta_w, RfDataRa
     return ((potential_satisfaction > 1) ? 1 : potential_satisfaction);
 }
 
-double AvailableResourceMatrix::estimateSatisfaction(int u, int Beta_l, VlcDataRateMatrix VLC_data_rate_matrix, MyUeList my_UE_list, TDMAMatrix TDMA_matrix)
+double AvailableResourceMatrix::estimateSatisfaction(int u, int Beta_l, VlcDataRateMatrix &VLC_data_rate_matrix, MyUeList &my_UE_list, TDMAMatrix &TDMA_matrix)
 {
     double potential_throughput = TDMA_matrix.getElement(Beta_l, 0) * VLC_data_rate_matrix.getElement(Beta_l, my_UE_list.getElement(u).GetID());
     double potential_satisfaction = potential_throughput / my_UE_list.getElement(u).Get_Required_DataRate();

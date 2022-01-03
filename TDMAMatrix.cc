@@ -16,7 +16,7 @@ void TDMAMatrix::resetToOne()
     }
 }
 
-void TDMAMatrix::allocateTimeFraction(int u, int curr_AP, double max_residual, MyUeList my_UE_list)
+void TDMAMatrix::allocateTimeFraction(int u, int curr_AP, double max_residual, MyUeList &my_UE_list)
 {
     double allocated_resource = getElement(curr_AP, 0) - max_residual;
 
