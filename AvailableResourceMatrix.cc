@@ -1,7 +1,7 @@
 #include "AvailableResourceMatrix.h"
 #include "TDMAMatrix.h"
 #include "RfDataRateMatrix.h"
-#include "VlcDataRateMatrix"
+#include "VlcDataRateMatrix.h"
 #include "AssociationMatrix.h"
 
 
@@ -16,22 +16,19 @@ void AvailableResourceMatrix::update(TDMAMatrix TDMA_matrix)
 
 }
 
-void AvailableResourceMatrix::allocate(int u, MyUeList my_UE_list, RfDataRateMatrix RF_data_rate_matrix)
+void AvailableResourceMatrix::allocate(int u, MyUeList my_UE_list, RfDataRateMatrix RF_data_rate_matrix, VlcDataRateMatrix VLC_data_rate_matrix)
 {
     for (int i = 0; i < RF_AP_Num; i++) {
         double tmp = my_UE_list.getElement(u).Get_Required_DataRate() / RF_data_rate_matrix.getElement(i, my_UE_list.getElement(u).GetID());
 
         setElement(0, i, (getElement(0, i) - tmp));
     }
-}
 
-void AvailableResourceMatrix::allocate(int u, MyUeList my_UE_list, VlcDataRateMatrix VLC_data_rate_matrix)
-{
-     for (int i = 0; i < VLC_AP_Num; i++) {
-         double tmp = my_UE_list.getElement(u).Get_Required_DataRate() / VLC_data_rate_matrix.getElement(i, my_UE_list.getElement(u).GetID());
+    for (int i = 0; i < VLC_AP_Num; i++) {
+        double tmp = my_UE_list.getElement(u).Get_Required_DataRate() / VLC_data_rate_matrix.getElement(i, my_UE_list.getElement(u).GetID());
 
-         setElement(1, i, (getElement(1, i) - tmp));
-     }
+        setElement(1, i, (getElement(1, i) - tmp));
+    }
 }
 
 double AvailableResourceMatrix::findBestAP(int u, RfDataRateMatrix RF_data_rate_matrix, VlcDataRateMatrix VLC_data_rate_matrix, MyUeList my_UE_list, TDMAMatrix TDMA_matrix, AssociationMatrix AP_association_matrix)
