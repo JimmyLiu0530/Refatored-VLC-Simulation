@@ -6,7 +6,7 @@
 #include <string>
 #include <chrono> // seed
 
-#include "My_UE_node.h";
+#include "My_UE_node.h"
 #include "ns3/core-module.h"
 
 

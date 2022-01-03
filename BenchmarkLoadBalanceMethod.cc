@@ -9,21 +9,23 @@
 
 
 void BenchmarkLoadBalanceMethod::DoAllocateState0(int &state,
-                                                std::vector<std::vector<double>> &RF_DataRate_Matrix,
-                                                std::vector<std::vector<double>> &VLC_DataRate_Matrix,
-                                                std::vector<std::vector<int>> &AP_Association_Matrix,
-                                                MyUeList &my_UE_list) 
+													std::vector<std::vector<double>> &RF_DataRate_Matrix,
+													std::vector<std::vector<double>> &VLC_DataRate_Matrix,
+													std::vector<std::vector<int>> &AP_Association_Matrix,
+													std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
+													std::vector<std::vector<double>> &TDMA_Matrix,
+													MyUeList &my_UE_list) 
 {
     ApAssociateState0(RF_DataRate_Matrix, VLC_DataRate_Matrix, AP_Association_Matrix, my_UE_list);
-    
 }
 
 void BenchmarkLoadBalanceMethod::DoAllocateStateN(int &state,
-                                                std::vector<std::vector<double>> &RF_DataRate_Matrix,
-                                                std::vector<std::vector<double>> &VLC_DataRate_Matrix,
-                                                std::vector<std::vector<int>> &AP_Association_Matrix,
-                                                std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
-                                                MyUeList &my_UE_list) 
+													std::vector<std::vector<double>> &RF_DataRate_Matrix,
+													std::vector<std::vector<double>> &VLC_DataRate_Matrix,
+													std::vector<std::vector<int>> &AP_Association_Matrix,
+													std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
+													std::vector<std::vector<double>> &TDMA_Matrix,
+													MyUeList &my_UE_list) 
 {
     ApAssociateStateN(RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, AP_Association_Matrix, my_UE_list);
 }
