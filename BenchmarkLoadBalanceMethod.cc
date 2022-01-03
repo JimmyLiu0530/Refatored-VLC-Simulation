@@ -9,31 +9,32 @@
 
 
 void BenchmarkLoadBalanceMethod::DoAllocateState0(int &state,
-													std::vector<std::vector<double>> &RF_DataRate_Matrix,
-													std::vector<std::vector<double>> &VLC_DataRate_Matrix,
-													std::vector<std::vector<int>> &AP_Association_Matrix,
-													std::vector<std::vector<double>> &TDMA_Matrix,
+													RfDataRateMatrix &RF_DataRate_Matrix,
+													VlcDataRateMatrix &VLC_DataRate_Matrix,
+													AssociationMatrix &AP_Association_Matrix,
+													HandoverEfficiencyMatrix &handover_efficiency_matrix,
+													TDMAMatrix &TDMA_Matrix,
 													MyUeList &my_UE_list) 
 {
     ApAssociateState0(RF_DataRate_Matrix, VLC_DataRate_Matrix, AP_Association_Matrix, my_UE_list);
 }
 
 void BenchmarkLoadBalanceMethod::DoAllocateStateN(int &state,
-													std::vector<std::vector<double>> &RF_DataRate_Matrix,
-													std::vector<std::vector<double>> &VLC_DataRate_Matrix,
-													std::vector<std::vector<int>> &AP_Association_Matrix,
-													std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
-													std::vector<std::vector<double>> &TDMA_Matrix,
+													RfDataRateMatrix &RF_data_rate_matrix,
+													VlcDataRateMatrix &VLC_data_rate_matrix,
+													AssociationMatrix &AP_association_matrix,
+													HandoverEfficiencyMatrix &handover_efficiency_matrix,
+													TDMAMatrix &TDMA_matrix,
 													MyUeList &my_UE_list) 
 {
-    ApAssociateStateN(RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, AP_Association_Matrix, my_UE_list);
+    ApAssociateStateN(RF_data_rate_matrix, VLC_data_rate_matrix, AP_association_matrix, handover_efficiency_matrix, my_UE_list);
 }
 
 
-void BenchmarkLoadBalanceMethod::ApAssociateState0(std::vector<std::vector<double>> &RF_DataRate_Matrix,
-                                                    std::vector<std::vector<double>> &VLC_DataRate_Matrix,
-                                                    std::vector<std::vector<int>> &AP_Association_Matrix,
-                                                    MyUeList &my_UE_list) 
+void BenchmarkLoadBalanceMethod::ApAssociateState0(RfDataRateMatrix &RF_data_rate_matrix,
+													VlcDataRateMatrix &VLC_data_rate_matrix,
+													AssociationMatrix &AP_association_matrix,
+													MyUeList &my_UE_list) 
 {
     //beta_u記錄AP selection的結果
 	//Algorithm2有分beta_1_u for LiFi AP,beta_2_u for WiFi AP
@@ -115,11 +116,11 @@ void BenchmarkLoadBalanceMethod::ApAssociateState0(std::vector<std::vector<doubl
 }
 
 
-void BenchmarkLoadBalanceMethod::ApAssociateStateN(std::vector<std::vector<double>> &RF_DataRate_Matrix,
-                                                    std::vector<std::vector<double>> &VLC_DataRate_Matrix,
-                                                    std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
-                                                    std::vector<std::vector<int>> &AP_Association_Matrix,
-                                                    MyUeList &my_UE_list)
+void BenchmarkLoadBalanceMethod::ApAssociateStateN(RfDataRateMatrix &RF_data_rate_matrix,
+													VlcDataRateMatrix &VLC_data_rate_matrix,
+													AssociationMatrix &AP_association_matrix,
+													HandoverEfficiencyMatrix &handover_efficiency_matrix,
+													MyUeList &my_UE_list)
 {
     //此段宣告與state0時相同，故省略注解
 	std::vector<int> beta_u(UE_Num, -1);
@@ -204,11 +205,11 @@ void BenchmarkLoadBalanceMethod::ApAssociateStateN(std::vector<std::vector<doubl
     ResourceAllocateStateN(RF_DataRate_Matrix, VLC_DataRate_Matrix, Handover_Efficiency_Matrix, my_UE_list, beta_u, served_UE_Num);
 }
 
-void BenchmarkLoadBalanceMethod::ResourceAllocateState0(std::vector<std::vector<double>> &RF_DataRate_Matrix,
-                                                        std::vector<std::vector<double>> &VLC_DataRate_Matrix,
-                                                        MyUeList &my_UE_list,
-                                                        std::vector<int> &beta_u,
-                                                        std::vector<int> &served_UE_Num) 
+void BenchmarkLoadBalanceMethod::ResourceAllocateState0(RfDataRateMatrix &RF_data_rate_matrix,
+														VlcDataRateMatrix &VLC_data_rate_matrix,
+														MyUeList &my_UE_list,
+														std::vector<int> &beta_u,
+														std::vector<int> &served_UE_Num) 
 {
     //////////////////////////////////
 	//////////////////////////////////
@@ -246,12 +247,12 @@ void BenchmarkLoadBalanceMethod::ResourceAllocateState0(std::vector<std::vector<
 	Benchmark_Update_RA_Result(my_UE_list, Throughput);
 }
 
-void BenchmarkLoadBalanceMethod::ResourceAllocateStateN(std::vector<std::vector<double>> &RF_DataRate_Matrix,
-                                                        std::vector<std::vector<double>> &VLC_DataRate_Matrix,
-                                                        std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
-                                                        MyUeList &my_UE_list,
-                                                        std::vector<int> &beta_u,
-                                                        std::vector<int> &served_UE_Num)
+void BenchmarkLoadBalanceMethod::ResourceAllocateStateN(RfDataRateMatrix &RF_data_rate_matrix,
+														VlcDataRateMatrix &VLC_data_rate_matrix,
+														HandoverEfficiencyMatrix &handover_efficiency_matrix,
+														MyUeList &my_UE_list,
+														std::vector<int> &beta_u,
+														std::vector<int> &served_UE_Num)
 {
     //////////////////////////////////
 	//////////////////////////////////
@@ -317,7 +318,7 @@ void BenchmarkLoadBalanceMethod::ResourceAllocateStateN(std::vector<std::vector<
 
 
 
-void BenchmarkLoadBalanceMethod::Benchmark_Update_APSelection_Result(MyUeList &my_UE_list, std::vector<int> &beta_u, std::vector<int> &served_UE_Num, std::vector<std::vector<int>> &AP_Association_Matrix)
+void BenchmarkLoadBalanceMethod::Benchmark_Update_APSelection_Result(MyUeList &my_UE_list, std::vector<int> &beta_u, std::vector<int> &served_UE_Num, AssociationMatrix &AP_association_matrix)
 {
     /** 先將新的AP到My_UE_Node中 **/
 	for (int ue_index = 0; ue_index < my_UE_list.getSize(); ue_index++)

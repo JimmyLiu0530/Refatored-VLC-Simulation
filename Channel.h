@@ -9,6 +9,9 @@
 #include "ns3/network-module.h"
 #include "ns3/mobility-module.h"
 #include "global_environment.h"
+#include "RfDataRateMatrix.h"
+#include "VlcDataRateMatrix.h"
+#include "HandoverEfficiencyMatrix.h"
 
 using namespace ns3;
 
@@ -50,13 +53,13 @@ double Estimate_one_VLC_SINR(std::vector<std::vector<double>> &VLC_Channel_Gain_
 ////////////////////////////////////////////////////////
 /////////          Data rate                   /////////
 ////////////////////////////////////////////////////////
-void Calculate_RF_DataRate_Matrix(std::vector<std::vector<double>> &RF_SINR_Matrix, std::vector<std::vector<double>> &RF_DataRate_Matrix);
+void Calculate_RF_DataRate_Matrix(std::vector<std::vector<double>> &RF_SINR_Matrix, RfDataRateMatrix &RF_data_rate_matrix);
 
-void Calculate_VLC_DataRate_Matrix(std::vector<std::vector<double>> &VLC_SINR_Matrix, std::vector<std::vector<double>> &VLC_DataRate_Matrix);
+void Calculate_VLC_DataRate_Matrix(std::vector<std::vector<double>> &VLC_SINR_Matrix, VlcDataRateMatrix &VLC_data_rate_matrix);
 
 ////////////////////////////////////////////////////////
 /////////         Handover_Efficiency          /////////
 ////////////////////////////////////////////////////////
 
-void Calculate_Handover_Efficiency_Matrix(std::vector<std::vector<double>> &Handover_Efficiency_Matrix);
+void Calculate_Handover_Efficiency_Matrix(HandoverEfficiencyMatrix &handover_efficiency_matrix);
 #endif

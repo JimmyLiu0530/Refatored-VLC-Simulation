@@ -8,41 +8,42 @@
 
 
 void LoadBalanceMethod::execute(int &state,
-            NodeContainer &RF_AP_Nodes,
-            NodeContainer &VLC_AP_Nodes,
-            NodeContainer &UE_Nodes,
-            std::vector<std::vector<double>> &RF_Channel_Gain_Matrix,
-            std::vector<std::vector<double>> &VLC_Channel_Gain_Matrix,
-            std::vector<std::vector<double>> &RF_SINR_Matrix,
-            std::vector<std::vector<double>> &VLC_SINR_Matrix,
-            std::vector<std::vector<double>> &RF_DataRate_Matrix,
-            std::vector<std::vector<double>> &VLC_DataRate_Matrix,
-            std::vector<std::vector<double>> &Handover_Efficiency_Matrix,
-            std::vector<std::vector<int>> &AP_Association_Matrix,
-            std::vector<std::vector<double>> &TDMA_Matrix,
-            MyUeList &my_UE_list) 
+                                NodeContainer &RF_AP_Nodes,
+                                NodeContainer &VLC_AP_Nodes,
+                                NodeContainer &UE_Nodes,
+                                std::vector<std::vector<double>> &RF_Channel_Gain_Matrix,
+                                std::vector<std::vector<double>> &VLC_Channel_Gain_Matrix,
+                                std::vector<std::vector<double>> &RF_SINR_Matrix,
+                                std::vector<std::vector<double>> &VLC_SINR_Matrix,
+                                RfDataRateMatrix &RF_data_rate_matrix,
+                                VlcDataRateMatrix &VLC_data_rate_matrix,
+                                HandoverEfficiencyMatrix &handover_efficiency_matrix,
+                                AssociationMatrix &AP_association_matrix,
+                                TDMAMatrix &TDMA_matrix,
+                                MyUeList &my_UE_list) 
 {
     precalculate(RF_AP_Nodes, VLC_AP_Nodes, UE_Nodes,
                    RF_Channel_Gain_Matrix, VLC_Channel_Gain_Matrix,
                    RF_SINR_Matrix, VLC_SINR_Matrix,
-                   RF_DataRate_Matrix, VLC_DataRate_Matrix,
-                   Handover_Efficiency_Matrix);
+                   RF_data_rate_matrix, VLC_data_rate_matrix,
+                   handover_efficiency_matrix);
 
     if (state == 0)
         DoAllocateState0(state, 
-                        RF_DataRate_Matrix,
-                        VLC_DataRate_Matrix,
-                        AP_Association_Matrix,
-                        TDMA_Matrix,
+                        RF_data_rate_matrix,
+                        VLC_data_rate_matrix,
+                        AP_association_matrix,
+                        handover_efficiency_matrix,
+                        TDMA_matrix,
                         my_UE_list);
         
     else
         DoAllocateStateN(state, 
-                        RF_DataRate_Matrix,
-                        VLC_DataRate_Matrix,
-                        AP_Association_Matrix,
-                        Handover_Efficiency_Matrix,
-                        TDMA_Matrix,
+                        RF_data_rate_matrix,
+                        VLC_data_rate_matrix,
+                        AP_association_matrix,
+                        handover_efficiency_matrix,
+                        TDMA_matrix,
                         my_UE_list);
         
 
@@ -63,9 +64,9 @@ void LoadBalanceMethod::precalculate(NodeContainer &RF_AP_Node,
                                     std::vector<std::vector<double>> &VLC_Channel_Gain_Matrix,
                                     std::vector<std::vector<double>> &RF_SINR_Matrix,
                                     std::vector<std::vector<double>> &VLC_SINR_Matrix,
-                                    std::vector<std::vector<double>> &RF_DataRate_Matrix,
-                                    std::vector<std::vector<double>> &VLC_DataRate_Matrix,
-                                    std::vector<std::vector<double>> &Handover_Efficiency_Matrix)
+                                    RfDataRateMatrix &RF_data_rate_matrix,
+                                    VlcDataRateMatrix &VLC_data_rate_matrix,
+                                    HandoverEfficiencyMatrix &handover_efficiency_matrix)
 {
     /** Algo1 , Line3 **/
 	//算RF/VLC的Channel gain
@@ -88,8 +89,8 @@ void LoadBalanceMethod::precalculate(NodeContainer &RF_AP_Node,
 
 	/** Algo1 , Line4 **/
 	//算RF/VLC的DataRate
-	Calculate_RF_DataRate_Matrix(RF_SINR_Matrix, RF_DataRate_Matrix);
-	Calculate_VLC_DataRate_Matrix(VLC_SINR_Matrix, VLC_DataRate_Matrix);
+	Calculate_RF_DataRate_Matrix(RF_SINR_Matrix, RF_data_rate_matrix);
+	Calculate_VLC_DataRate_Matrix(VLC_SINR_Matrix, VLC_data_rate_matrix);
 
 #if DEBUG_MODE
 	print_RF_DataRate_Matrix(RF_DataRate_Matrix);
@@ -98,7 +99,7 @@ void LoadBalanceMethod::precalculate(NodeContainer &RF_AP_Node,
 
 	/** Algo1 , Line5 **/
 	//算Handover_Efficiency_Matrix
-	Calculate_Handover_Efficiency_Matrix(Handover_Efficiency_Matrix);
+	Calculate_Handover_Efficiency_Matrix(handover_efficiency_matrix);
 
 #if DEBUG_MODE
 	print_Handover_Efficiency_Matrix(Handover_Efficiency_Matrix);

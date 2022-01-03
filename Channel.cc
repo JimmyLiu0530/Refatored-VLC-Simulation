@@ -9,11 +9,12 @@
 #include <chrono> //seed
 #include <random>
 
+
+#include "Channel.h"
+#include "global_environment.h"
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/mobility-module.h"
-#include "Channel.h"
-#include "global_environment.h"
 #include <boost/math/distributions/rayleigh.hpp>
 
 //弧度轉角度
@@ -293,7 +294,7 @@ double Estimate_one_VLC_SINR(std::vector<std::vector<double>> &VLC_Channel_Gain_
 }
 
 //計算RF DataRate
-void Calculate_RF_DataRate_Matrix(std::vector<std::vector<double>> &RF_SINR_Matrix, std::vector<std::vector<double>> &RF_DataRate_Matrix)
+void Calculate_RF_DataRate_Matrix(std::vector<std::vector<double>> &RF_SINR_Matrix, RfDataRateMatrix &RF_data_rate_matrix)
 {
 
 	for (int i = 0; i < RF_AP_Num; i++)
@@ -303,13 +304,14 @@ void Calculate_RF_DataRate_Matrix(std::vector<std::vector<double>> &RF_SINR_Matr
 		{
 
 			//Shannon capacity
-			RF_DataRate_Matrix[i][j] = RF_AP_Bandwidth * log2(1 + RF_SINR_Matrix[i][j]);
+			double capacity = RF_AP_Bandwidth * log2(1 + RF_SINR_Matrix[i][j]);
+			RF_data_rate_matrix.setElement(i, j, capacity);
 		}
 	}
 }
 
 //計算VLC DataRate
-void Calculate_VLC_DataRate_Matrix(std::vector<std::vector<double>> &VLC_SINR_Matrix, std::vector<std::vector<double>> &VLC_DataRate_Matrix)
+void Calculate_VLC_DataRate_Matrix(std::vector<std::vector<double>> &VLC_SINR_Matrix, VlcDataRateMatrix &VLC_data_rate_matrix)
 {
 
 	for (int i = 0; i < VLC_AP_Num; i++)
@@ -319,7 +321,8 @@ void Calculate_VLC_DataRate_Matrix(std::vector<std::vector<double>> &VLC_SINR_Ma
 		{
 
 			//Shannon capacity
-			VLC_DataRate_Matrix[i][j] = 0.5 * VLC_AP_Bandwidth * log2(1 + VLC_SINR_Matrix[i][j]);
+			double capacity = 0.5 * VLC_AP_Bandwidth * log2(1 + VLC_SINR_Matrix[i][j]);
+			VLC_data_rate_matrix.setElement(i, j, capacity);
 		}
 	}
 }
@@ -334,7 +337,7 @@ void Calculate_VLC_DataRate_Matrix(std::vector<std::vector<double>> &VLC_SINR_Ma
     ..
     ..
 */
-void Calculate_Handover_Efficiency_Matrix(std::vector<std::vector<double>> &Handover_Efficiency_Matrix)
+void Calculate_Handover_Efficiency_Matrix(HandoverEfficiencyMatrix &handover_efficiency_matrix)
 {
 
 	/////////////////////////////////////////
@@ -433,7 +436,8 @@ void Calculate_Handover_Efficiency_Matrix(std::vector<std::vector<double>> &Hand
 		{
 
 			//handover efficiency = max(0 , 1 - overhead / 每一輪的period Tp)
-			Handover_Efficiency_Matrix[i][j] = (1 - ((double)Handover_Overhead_Matrix[i][j] / Tp)) > 0 ? 1 - ((double)Handover_Overhead_Matrix[i][j] / Tp) : 0;
+			double tmp = (1 - ((double)Handover_Overhead_Matrix[i][j] / Tp)) > 0 ? 1 - ((double)Handover_Overhead_Matrix[i][j] / Tp) : 0;
+			Handover_Efficiency_Matrix.setElement(i, j, tmp); 
 		}
 	}
 }

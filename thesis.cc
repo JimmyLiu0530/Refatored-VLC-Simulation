@@ -55,6 +55,8 @@
 #include "BenchmarkLoadBalanceMethod.h"
 #include "ProposedLoadBalanceMethod.h"
 
+
+
 using namespace ns3;
 // using namespace std;
 
@@ -62,10 +64,10 @@ NS_LOG_COMPONENT_DEFINE("TcpLargeTransfer");
 std::vector<double> Received(1, 0);
 std::vector<double> theTime(1, 0);
 
-std::vector<std::vector<int>> AP_Association_Matrix(RF_AP_Num + VLC_AP_Num, std::vector<int>(UE_Num + 1, 0)); //χ(i,u)
-std::vector<std::vector<double>> TDMA_Matrix(RF_AP_Num + VLC_AP_Num, std::vector<double>(UE_Num + 1, 0));	  //ρ(i,u)
+AssociationMatrix AP_association_matrix(RF_AP_Num + VLC_AP_Num, UE_Num + 1); //χ(i,u)
+TDMAMatrix TDMA_matrix(RF_AP_Num + VLC_AP_Num, UE_Num + 1);	  //ρ(i,u)
 
-std::vector<std::vector<double>> Handover_Efficiency_Matrix(RF_AP_Num + VLC_AP_Num, std::vector<double>(RF_AP_Num + VLC_AP_Num, 0)); //η(i,j)
+HandoverEfficiencyMatrix Handover_efficiency_matrix(RF_AP_Num + VLC_AP_Num, RF_AP_Num + VLC_AP_Num); //η(i,j)
 
 std::vector<std::vector<double>> RF_Channel_Gain_Matrix(RF_AP_Num, std::vector<double>(UE_Num, 0));
 std::vector<std::vector<double>> VLC_Channel_Gain_Matrix(VLC_AP_Num, std::vector<double>(UE_Num, 0));
@@ -73,8 +75,8 @@ std::vector<std::vector<double>> VLC_Channel_Gain_Matrix(VLC_AP_Num, std::vector
 std::vector<std::vector<double>> RF_SINR_Matrix(RF_AP_Num, std::vector<double>(UE_Num, 0));
 std::vector<std::vector<double>> VLC_SINR_Matrix(VLC_AP_Num, std::vector<double>(UE_Num, 0));
 
-std::vector<std::vector<double>> RF_DataRate_Matrix(RF_AP_Num + VLC_AP_Num, std::vector<double>(UE_Num, 0));
-std::vector<std::vector<double>> VLC_DataRate_Matrix(VLC_AP_Num, std::vector<double>(UE_Num, 0));
+RfDataRateMatrix RF_data_rate_matrix(RF_AP_Num + VLC_AP_Num, UE_Num);
+VlcDataRateMatrix VLC_data_rate_matrix(VLC_AP_Num, UE_Num);
 
 std::vector<double> recorded_avg_throughput_per_UE(UE_Num, 0);
 std::vector<double> recorded_avg_satisfaction_level_per_UE(UE_Num, 0);
@@ -131,16 +133,16 @@ void Dynamic_Update_to_NextState(NodeContainer &RF_AP_Nodes, NodeContainer &VLC_
 	proposed->execute(state, RF_AP_Nodes, VLC_AP_Nodes, UE_Nodes,
 					   RF_Channel_Gain_Matrix, VLC_Channel_Gain_Matrix,
 					   RF_SINR_Matrix, VLC_SINR_Matrix,
-					   RF_DataRate_Matrix, VLC_DataRate_Matrix,
-					   Handover_Efficiency_Matrix, AP_Association_Matrix, TDMA_Matrix, my_UE_list);
+					   RF_data_rate_matrix, VLC_data_rate_matrix,
+					   Handover_efficiency_matrix, AP_association_matrix, TDMA_matrix, my_UE_list);
 
 #else //Benchmark的做法
 
 	benchmark->execute(state, RF_AP_Nodes, VLC_AP_Nodes, UE_Nodes,
 						RF_Channel_Gain_Matrix, VLC_Channel_Gain_Matrix,
 						RF_SINR_Matrix, VLC_SINR_Matrix,
-						RF_DataRate_Matrix, VLC_DataRate_Matrix,
-						Handover_Efficiency_Matrix, AP_Association_Matrix, my_UE_list);
+						RF_data_rate_matrix, VLC_data_rate_matrix,
+						Handover_efficiency_matrix, AP_association_matrix, TDMA_matrix, my_UE_list);
 
 #endif
 
